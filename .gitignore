@@ -1,0 +1,19 @@
+*.blend?
+Library
+Temp
+TestBuilds
+<<<<<<< HEAD
+Builds
+*.sln
+*.csproj
+*.pidb
+*.unityproj
+*.userprefs
+=======
+/Assembly-CSharp-vs.csproj
+/Assembly-CSharp.csproj
+/Assembly-CSharp.pidb
+/GameJam-csharp.sln
+/GameJam.sln
+/GameJam.userprefs
+>>>>>>> master
