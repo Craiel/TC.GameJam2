@@ -3,7 +3,8 @@ using System.Collections;
 
 public enum CharacterMovementState
 {
-	Standing,
+	Idle,
+	Punching,
 	Walking,
 	Running,
 	Jumping,
@@ -55,7 +56,7 @@ public class CharacterEntity : StageEntity
 			this.startPos = null;
 		}
 		
-		if (this.movementState == CharacterMovementState.Running || this.movementState == CharacterMovementState.Standing || this.movementState == CharacterMovementState.Walking)
+		if (this.movementState == CharacterMovementState.Running || this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Walking || this.movementState == CharacterMovementState.Punching)
 		{
 			this.lastGroundedPosition = this.transform.position;
 		}
@@ -103,12 +104,18 @@ public class CharacterEntity : StageEntity
 	
 	protected void MoveCharacter(float newX, float newZ)
 	{
-		if(this.CanMoveInAir || this.movementState == CharacterMovementState.Running || this.movementState == CharacterMovementState.Standing || this.movementState == CharacterMovementState.Walking)
+		if(this.CanMoveInAir || this.movementState == CharacterMovementState.Running || this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Walking)
 		{
+			// Clear out depth movement if we are airborne
+			if(this.movementState == CharacterMovementState.Falling || this.movementState == CharacterMovementState.Jumping || this.movementState == CharacterMovementState.Leveling)
+			{
+				newZ = 0;
+			}
+			
 			if(this.IsRunning)
 			{
 				print ("Running");
-				if(this.movementState == CharacterMovementState.Standing || this.movementState == CharacterMovementState.Walking)
+				if(this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Walking)
 				{
 					this.movementState = CharacterMovementState.Running;
 				}
@@ -118,7 +125,7 @@ public class CharacterEntity : StageEntity
 			else
 			{
 				print ("Walking");
-				if(this.movementState == CharacterMovementState.Standing || this.movementState == CharacterMovementState.Running)
+				if(this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Running)
 				{
 					this.movementState = CharacterMovementState.Walking;
 				}
@@ -127,6 +134,7 @@ public class CharacterEntity : StageEntity
 			}		
 			
 			this.moveDirection = new Vector2(newX, newZ);
+			print (this.moveDirection);
 		}
 	}
 	
@@ -146,8 +154,8 @@ public class CharacterEntity : StageEntity
 			this.levelingTimer++;
 			if(this.levelingTimer > 5)
 			{
-				print ("Standing");
-				this.movementState = CharacterMovementState.Standing;
+				print ("Idle");
+				this.movementState = CharacterMovementState.Idle;
 				return;
 			} 
 			
