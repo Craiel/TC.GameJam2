@@ -12,8 +12,8 @@ FBXHeaderExtension:  {
         Month: 07
         Day: 12
         Hour: 20
-        Minute: 41
-        Second: 19
+        Minute: 50
+        Second: 12
         Millisecond: 0
     }
     Creator: "FBX SDK/FBX Plugins build 20070228"
@@ -21,7 +21,7 @@ FBXHeaderExtension:  {
         FlagPLE: 0
     }
 }
-CreationTime: "2013-07-12 20:41:19:000"
+CreationTime: "2013-07-12 20:50:12:000"
 Creator: "Blender version 2.67 (sub 0)"
 
 ; Object definitions
@@ -141,9 +141,9 @@ Objects:  {
         Properties60:  {
             Property: "QuaternionInterpolate", "bool", "",0
             Property: "Visibility", "Visibility", "A+",1
-			Property: "Lcl Translation", "Lcl Translation", "A+",2.650541067123413,-0.817969858646393,4.032032012939453
-			Property: "Lcl Rotation", "Lcl Rotation", "A+",0.000000000000000,-0.000000000000000,0.000000000000000
-			Property: "Lcl Scaling", "Lcl Scaling", "A+",1.000000000000000,1.000000000000000,1.000000000000000
+			Property: "Lcl Translation", "Lcl Translation", "A+",-265.054107666015625,403.203186035156250,-81.796989440917969
+			Property: "Lcl Rotation", "Lcl Rotation", "A+",90.000009334538021,-0.000000000000000,180.000005008697713
+			Property: "Lcl Scaling", "Lcl Scaling", "A+",100.000000000000000,100.000000000000000,100.000000000000000
 			Property: "RotationOffset", "Vector3D", "",0,0,0
 			Property: "RotationPivot", "Vector3D", "",0,0,0
 			Property: "ScalingOffset", "Vector3D", "",0,0,0
@@ -2919,7 +2919,7 @@ Objects:  {
         NbPoseNodes: 1
 		PoseNode:  {
 			Node: "Model::ChemicalVat3"
-			Matrix: 0.000000075497901,1.000000000000000,0.000000000000000,0.000000000000000,-1.000000000000000,0.000000075497901,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,1.000000000000000,0.000000000000000,2.650541067123413,-0.817969858646393,4.032032012939453,1.000000000000000
+			Matrix: -0.000007549790098,0.000000000000000,100.000000000000000,0.000000000000000,100.000000000000000,0.000000000000000,0.000007549790098,0.000000000000000,0.000000000000000,100.000000000000000,0.000000000000000,0.000000000000000,-265.054107666015625,403.203186035156250,-81.796989440917969,1.000000000000000
 		}
 	}
     GlobalSettings:  {

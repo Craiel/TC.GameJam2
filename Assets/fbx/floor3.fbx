@@ -12,8 +12,8 @@ FBXHeaderExtension:  {
         Month: 07
         Day: 12
         Hour: 20
-        Minute: 19
-        Second: 53
+        Minute: 50
+        Second: 36
         Millisecond: 0
     }
     Creator: "FBX SDK/FBX Plugins build 20070228"
@@ -21,7 +21,7 @@ FBXHeaderExtension:  {
         FlagPLE: 0
     }
 }
-CreationTime: "2013-07-12 20:19:53:000"
+CreationTime: "2013-07-12 20:50:36:000"
 Creator: "Blender version 2.67 (sub 0)"
 
 ; Object definitions
@@ -40,6 +40,9 @@ Definitions:  {
         Count: 2
     }
     ObjectType: "Pose" {
+        Count: 1
+    }
+    ObjectType: "GroupSelection" {
         Count: 1
     }
     ObjectType: "GlobalSettings" {
@@ -136,14 +139,14 @@ Objects:  {
         CameraName: 100
         CameraIndexName:
     }
-	Model: "Model::Floor3", "Mesh" {
+	Model: "Model::Floor1", "Mesh" {
 		Version: 232
         Properties60:  {
             Property: "QuaternionInterpolate", "bool", "",0
             Property: "Visibility", "Visibility", "A+",1
-			Property: "Lcl Translation", "Lcl Translation", "A+",0.000000000000000,22.305927276611328,0.000000000000000
-			Property: "Lcl Rotation", "Lcl Rotation", "A+",0.000000000000000,-0.000000000000000,0.000000000000000
-			Property: "Lcl Scaling", "Lcl Scaling", "A+",1.000000000000000,1.000000000000000,1.000000000000000
+			Property: "Lcl Translation", "Lcl Translation", "A+",0.000000000000000,0.000000000000000,0.000000000000000
+			Property: "Lcl Rotation", "Lcl Rotation", "A+",90.000009334538021,-0.000000000000000,180.000005008697713
+			Property: "Lcl Scaling", "Lcl Scaling", "A+",100.000000000000000,100.000000000000000,100.000000000000000
 			Property: "RotationOffset", "Vector3D", "",0,0,0
 			Property: "RotationPivot", "Vector3D", "",0,0,0
 			Property: "ScalingOffset", "Vector3D", "",0,0,0
@@ -1335,18 +1338,18 @@ Objects:  {
 		AudioColor: 0,1,0
 		CameraOrthoZoom: 1
 	}
-	Material: "Material::Floor3", "" {
+	Material: "Material::Floor1", "" {
 		Version: 102
 		ShadingModel: "lambert"
 		MultiLayer: 0
 		Properties60:  {
 			Property: "ShadingModel", "KString", "", "Lambert"
 			Property: "MultiLayer", "bool", "",0
-			Property: "EmissiveColor", "ColorRGB", "",0.3757,0.3757,0.3757
+			Property: "EmissiveColor", "ColorRGB", "",0.1417,0.2019,0.1405
 			Property: "EmissiveFactor", "double", "",0.0000
 			Property: "AmbientColor", "ColorRGB", "",0.0000,0.0000,0.0000
 			Property: "AmbientFactor", "double", "",1.0000
-			Property: "DiffuseColor", "ColorRGB", "",0.3757,0.3757,0.3757
+			Property: "DiffuseColor", "ColorRGB", "",0.1417,0.2019,0.1405
 			Property: "DiffuseFactor", "double", "",0.6421
 			Property: "Bump", "Vector3D", "",0,0,0
 			Property: "TransparentColor", "ColorRGB", "",1,1,1
@@ -1358,7 +1361,7 @@ Objects:  {
 			Property: "ReflectionFactor", "double", "",1
 			Property: "Emissive", "ColorRGB", "",0,0,0
 			Property: "Ambient", "ColorRGB", "",0.0,0.0,0.0
-			Property: "Diffuse", "ColorRGB", "",0.4,0.4,0.4
+			Property: "Diffuse", "ColorRGB", "",0.1,0.2,0.1
 			Property: "Specular", "ColorRGB", "",1.0,1.0,1.0
 			Property: "Shininess", "double", "",8.6
 			Property: "Opacity", "double", "",1.0
@@ -1395,6 +1398,15 @@ Objects:  {
 			Property: "Reflectivity", "double", "",0
 		}
 	}
+	GroupSelection: "GroupSelection::TestFloor", "Default" {
+        Properties60:  {
+            Property: "MultiLayer", "bool", "",0
+            Property: "Pickable", "bool", "",1
+            Property: "Transformable", "bool", "",1
+            Property: "Show", "bool", "",1
+        }
+        MultiLayer: 0
+    }
     Pose: "Pose::BIND_POSES", "BindPose" {
         Type: "BindPose"
         Version: 100
@@ -1402,8 +1414,8 @@ Objects:  {
         }
         NbPoseNodes: 1
 		PoseNode:  {
-			Node: "Model::Floor3"
-			Matrix: 0.000000075497901,1.000000000000000,0.000000000000000,0.000000000000000,-1.000000000000000,0.000000075497901,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,1.000000000000000,0.000000000000000,0.000000000000000,22.305927276611328,0.000000000000000,1.000000000000000
+			Node: "Model::Floor1"
+			Matrix: -0.000007549790098,0.000000000000000,100.000000000000000,0.000000000000000,100.000000000000000,0.000000000000000,0.000007549790098,0.000000000000000,0.000000000000000,100.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,0.000000000000000,1.000000000000000
 		}
 	}
     GlobalSettings:  {
@@ -1424,7 +1436,7 @@ Objects:  {
 ;------------------------------------------------------------------
 
 Relations:  {
-	Model: "Model::Floor3", "Mesh" {
+	Model: "Model::Floor1", "Mesh" {
 	}
     Model: "Model::Producer Perspective", "Camera" {
     }
@@ -1442,9 +1454,11 @@ Relations:  {
     }
     Model: "Model::Camera Switcher", "CameraSwitcher" {
     }
-	Material: "Material::Floor3", "" {
+	Material: "Material::Floor1", "" {
 	}
 	Material: "Material::unnamed", "" {
+	}
+	GroupSelection: "GroupSelection::TestFloor", "Default" {
 	}
 }
 
@@ -1452,8 +1466,9 @@ Relations:  {
 ;------------------------------------------------------------------
 
 Connections:  {
-	Connect: "OO", "Model::Floor3", "Model::Scene"
-	Connect: "OO", "Material::Floor3", "Model::Floor3"
+	Connect: "OO", "Model::Floor1", "Model::Scene"
+	Connect: "OO", "Material::Floor1", "Model::Floor1"
+	Connect: "OO", "Model::Floor1", "GroupSelection::TestFloor"
 }
 ;Takes and animation section
 ;----------------------------------------------------
