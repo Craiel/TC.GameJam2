@@ -72,7 +72,7 @@ public class Player : CharacterEntity
 		
 		this.CheckAction(attackState > 0, jumpState > 0);
 		this.MoveCharacter(newX, newZ);
-		
+				
 		if(this.CameraFollows)
 		{
 			this.mainCamera.transform.position = new Vector3(this.transform.position.x, this.mainCamera.transform.position.y, this.mainCamera.transform.position.z);
