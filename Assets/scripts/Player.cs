@@ -69,7 +69,7 @@ public class Player : CharacterEntity
 		
 		this.CheckAction(attackState > 0, jumpState > 0);
 		transform.position = new Vector3(transform.position.x, newY, transform.position.z);
-		transform.Translate(new Vector3(newX, newY, newZ), null);
+		transform.Translate(new Vector3(newX * Speed, 0, newZ * Speed), null);
 		
 		if(this.CameraFollows)
 		{

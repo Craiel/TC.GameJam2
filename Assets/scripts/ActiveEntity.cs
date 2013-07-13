@@ -89,10 +89,20 @@ public class ActiveEntity : MonoBehaviour
 		this.CollisionEnabled = damage > 0.0f;
 	}
 	
+	public void OnTriggerEnter(Collider collider)
+	{
+		this.ProcessCollision(collider);
+	}
+	
+	public void OnTriggerStay(Collider collider)
+	{
+		this.ProcessCollision(collider);
+	}
+	
 	// ---------------------------------------------
-	// Private
+	// Protected
 	// ---------------------------------------------
-	private void ProcessCollision(Collider collider)
+	protected virtual void ProcessCollision(Collider collider)
 	{
 		ActiveEntity component = collider.gameObject.GetComponent(typeof(ActiveEntity)) as ActiveEntity;
 		if(component != null && component.GetType() != this.GetType())
@@ -104,15 +114,5 @@ public class ActiveEntity : MonoBehaviour
 						
 			this.TakeDamage(component.CollisionDamage, collider.gameObject);
 		}
-	}
-	
-	private void OnTriggerEnter(Collider collider)
-	{
-		this.ProcessCollision(collider);
-	}
-	
-	private void OnTriggerStay(Collider collider)
-	{
-		this.ProcessCollision(collider);
 	}
 }

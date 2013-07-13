@@ -15,8 +15,10 @@ public class CharacterEntity : ActiveEntity
 	// ---------------------------------------------
 	public float Speed = 1.0f;
 	
-	public float JumpStrength = 3.0f;	
+	public float JumpStrength = 3.0f;
 	public float JumpFalloff = 0.1f;
+	
+	public float TerminalVelocity = -0.1f;
 	
 	public override void Update()
 	{
@@ -32,6 +34,11 @@ public class CharacterEntity : ActiveEntity
 		{
 			this.currentHeight += this.currentYAccelleration;
 			this.currentYAccelleration -= this.currentYFalloff;
+			if(this.currentYAccelleration < this.TerminalVelocity)
+			{
+				this.currentYAccelleration = this.TerminalVelocity;
+			}
+			
 			print (this.currentYAccelleration);
 			if(this.currentHeight < 0)
 			{
@@ -44,6 +51,14 @@ public class CharacterEntity : ActiveEntity
 	public void Initialize(Vector3 position)
 	{
 		this.startPos = position;
+	}
+	
+	public void OnCollisionEnter(Collision collision)
+	{
+		foreach(var contact in collision.contacts)
+		{
+			Debug.DrawRay(contact.point, contact.normal, Color.white);
+		}
 	}
 	
 	// ---------------------------------------------
