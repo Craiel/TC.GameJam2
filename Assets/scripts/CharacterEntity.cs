@@ -2,18 +2,21 @@ using UnityEngine;
 using System.Collections;
 
 public class CharacterEntity : ActiveEntity 
-{
-	private float speed;
-	
+{	
 	private Vector3? startPos;
+	
+	private bool isJumping;
+	private float currentHeight;
+	private float currentYAccelleration;
+	private float currentYFalloff;
 			
-	public float Speed
-	{
-		get
-		{
-			return this.speed;
-		}
-	}
+	// ---------------------------------------------
+	// Public
+	// ---------------------------------------------
+	public float Speed = 1.0f;
+	
+	public float JumpStrength = 3.0f;	
+	public float JumpFalloff = 0.1f;
 	
 	public override void Update()
 	{
@@ -25,12 +28,44 @@ public class CharacterEntity : ActiveEntity
 			this.startPos = null;
 		}
 		
-		this.transform.localPosition += new Vector3(0, -this.speed * Time.deltaTime, 0);
+		if(this.isJumping)
+		{
+			this.currentHeight += this.currentYAccelleration;
+			this.currentYAccelleration -= this.currentYFalloff;
+			print (this.currentYAccelleration);
+			if(this.currentHeight < 0)
+			{
+				this.currentHeight = 0;
+				this.isJumping = false;
+			}
+		}
 	}
 	
-	public void Initialize(Vector3 position, float lifeTime, float speed)
+	public void Initialize(Vector3 position)
 	{
 		this.startPos = position;
-		this.speed = speed;
+	}
+	
+	// ---------------------------------------------
+	// Protected
+	// ---------------------------------------------
+	protected float CurrentYPos
+	{
+		get
+		{
+			return this.currentHeight;
+		}
+	}
+	
+	protected void StartJump()
+	{
+		if(this.isJumping)
+		{
+			return;
+		}
+		
+		this.isJumping = true;
+		this.currentYAccelleration = this.JumpStrength;
+		this.currentYFalloff = this.JumpFalloff;
 	}
 }
