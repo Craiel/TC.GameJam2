@@ -16,6 +16,7 @@ public class Player : CharacterEntity
 	public string ControlPrefix = "Player1";
 	
 	public bool CameraFollows = false;
+	public bool CameraFollowsY = false;
 	
 	public int Score
 	{
@@ -50,7 +51,7 @@ public class Player : CharacterEntity
 	}
 	
 	// Use this for initialization
-	public override void Start () 
+	public override void Start() 
 	{	
 		base.Start();
 		
@@ -75,8 +76,10 @@ public class Player : CharacterEntity
 		if(this.CameraFollows)
 		{
 			this.mainCamera.transform.position = new Vector3(this.transform.position.x, this.mainCamera.transform.position.y, this.mainCamera.transform.position.z);
-			this.mainCamera.transform.LookAt(this.transform);
-			//this.mainCamera.transform.Translate(new Vector3(newX, 0, 0), null);
+			if(this.CameraFollowsY)
+			{
+				this.mainCamera.transform.LookAt(this.transform);
+			}
 		}
 	}
 	
