@@ -1,9 +1,8 @@
 using UnityEngine;
 using System.Collections;
 
-public class CameraManager : MonoBehaviour {
-	
-#region Class Singleton
+public class CameraManager : MonoBehaviour
+{	
 	private static CameraManager m_Instance = null;
 
 	public static CameraManager Instance
@@ -17,9 +16,7 @@ public class CameraManager : MonoBehaviour {
 			return m_Instance;
 		}
 	}
-#endregion
-
-#region Properties
+	
 	private float m_LeftBorder = 0.0f;
 	public float LeftBorder
 	{
@@ -56,7 +53,6 @@ public class CameraManager : MonoBehaviour {
 			return m_TopBorder;
 		}
 	}
-#endregion
 	
 	private Vector3 m_BorderTempVector = Vector3.zero;
 	
@@ -65,7 +61,6 @@ public class CameraManager : MonoBehaviour {
 		UpdateBorders();
 	}
 	
-	// Use this for initialization
 	void Start () 
 	{
 	}
@@ -77,15 +72,13 @@ public class CameraManager : MonoBehaviour {
 	
 	void UpdateBorders()
 	{
-		//print ("Updating camera borders..");
 		m_BorderTempVector.Set(0,0,Camera.main.transform.position.z);
 		m_LeftBorder = Camera.main.ViewportToWorldPoint(m_BorderTempVector).x;
 		m_TopBorder = Camera.main.ViewportToWorldPoint(m_BorderTempVector).y;
 		
 		m_BorderTempVector.Set(1,1,Camera.main.transform.position.z);
 		m_RightBorder = Camera.main.ViewportToWorldPoint(m_BorderTempVector).x;
-		m_BottomBorder = Camera.main.ViewportToWorldPoint(m_BorderTempVector).y;		
-		//print ("Borders:" +m_LeftBorder+", "+m_RightBorder+", "+m_TopBorder+", "+m_BottomBorder);
+		m_BottomBorder = Camera.main.ViewportToWorldPoint(m_BorderTempVector).y;
 	}
 		
 }
