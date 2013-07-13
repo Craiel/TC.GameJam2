@@ -1,55 +1,94 @@
 using UnityEngine;
 using System.Collections;
 
-public class Player : ShipBase 
-{
+public class Player : CharacterEntity 
+{	
+	private Camera mainCamera;
+	
+	private int score;
+	private int lives;
+		
+	// ---------------------------------------------
+	// Public
+	// ---------------------------------------------
 	public float StartingHealth = 100.0f;
 	
+	public string ControlPrefix = "Player1";
+	
+	public bool CameraFollows = false;
+	
+	public int Score
+	{
+		get
+		{
+			return this.score;
+		}
+		
+		set
+		{
+			if(this.score != value)
+			{
+				this.score = value;
+			}
+		}
+	}
+	
+	public int Lives
+	{
+		get
+		{
+			return this.lives;
+		}
+		
+		set
+		{
+			if(this.lives != value)
+			{
+				this.lives = value;
+			}
+		}
+	}
+	
 	// Use this for initialization
-	void Start () 
+	public void Start () 
 	{	
+		this.mainCamera = Camera.main;
 		this.Health = this.StartingHealth;
-		
-		var weapon = WeaponGravity.Create();
-		weapon.name = "Gravity Gun";
-		weapon.GetComponent<Weapon>().Source = ShotSource.Friend;
-		
-		this.AddWeapon(weapon);
 	}
 	
 	public override void Update()
 	{
 		base.Update();
 		
-		if(Input.GetMouseButton(0))
-		{
-			this.Fire();
-		}
-		else
-		{
-			this.Disable();
-		}
+		float newX = Input.GetAxis(ControlPrefix+" Horizontal");
+		float newZ = Input.GetAxis(ControlPrefix+" Vertical");
+		float newY = this.CurrentYPos;
 		
-		if(Input.GetMouseButton(1))
-		{
-			this.Fire(true, null, true);
-		}
+		float attackState = Input.GetAxis(ControlPrefix+" Attack");
+		float jumpState = Input.GetAxis(ControlPrefix+" Jump");
 		
-		/*float wheel = Input.GetAxis("Mouse ScrollWheel");
-		if(wheel < 0.0f || wheel > 0.0f)
+		this.CheckAction(attackState > 0, jumpState > 0);
+		transform.position = new Vector3(transform.position.x, newY, transform.position.z);
+		transform.Translate(new Vector3(newX * Speed, 0, newZ * Speed), null);
+		
+		if(this.CameraFollows)
 		{
-			foreach(GameObject weapon in this.weapons.Keys)
-			{
-				if(weapon.GetComponent<WeaponGravity>() != null)
-				{
-					weapon.GetComponent<WeaponGravity>().ChangeRadius(wheel * 75.0f);
-				}
-			}
-		}*/
+			this.mainCamera.transform.LookAt(this.transform);
+			this.mainCamera.transform.Translate(new Vector3(newX, 0, 0), null);
+		}
 	}
 	
-	protected override bool AcceptShotSource (ShotSource source)
+	private void CheckAction(bool attack, bool jump)
 	{
-		return source != ShotSource.Friend;	
+		if(jump)
+		{
+			this.StartJump();
+		}
+	}
+	
+	private void UpdateVisuals()
+	{
+		// Todo:
+		// 
 	}
 }

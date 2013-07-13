@@ -1,9 +1,9 @@
 using UnityEngine;
 using System.Collections;
 
-public class MainMenu : MonoBehaviour {
-	
-	public GameManager m_GameManager = null;
+public class MainMenu : MonoBehaviour
+{	
+	public GameManager gameManager = null;
 	
 	// Use this for initialization
 	void Start () {
@@ -18,7 +18,7 @@ public class MainMenu : MonoBehaviour {
 	{
 		if(Input.GetMouseButtonDown(0))
 		{
-			m_GameManager.StartGame();
+			this.gameManager.StartGame();
 			gameObject.SetActive(false);
 		}
 	}
