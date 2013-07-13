@@ -13,9 +13,7 @@ public enum CharacterMovementState
 }
 
 public class CharacterEntity : StageEntity 
-{	
-	private Rigidbody rigidBody;
-	
+{		
 	private Vector3? startPos;
 		
 	private CharacterMovementState movementState;
@@ -43,7 +41,6 @@ public class CharacterEntity : StageEntity
 	
 	public virtual void Start()
 	{
-		this.rigidBody = this.GetComponent<Rigidbody>();
 	}
 	
 	public override void Update()
@@ -67,11 +64,11 @@ public class CharacterEntity : StageEntity
 		}
 		else if (this.movementState != CharacterMovementState.Falling)
 		{
-			if(this.rigidBody.velocity.y < -0.01f)
+			/*if(this.rigidBody.velocity.y < -0.01f)
 			{
 				print ("Falling");
 				this.movementState = CharacterMovementState.Falling;
-			}
+			}*/
 		}	
 	}
 	
@@ -90,14 +87,14 @@ public class CharacterEntity : StageEntity
 	protected void StartJump()
 	{
 		// No jumping if we already are or have no rigid body\\ t
-		if(this.movementState == CharacterMovementState.Jumping || this.movementState == CharacterMovementState.Falling || this.movementState == CharacterMovementState.Leveling || this.rigidBody == null)
+		if(this.movementState == CharacterMovementState.Jumping || this.movementState == CharacterMovementState.Falling || this.movementState == CharacterMovementState.Leveling)
 		{
 			return;
 		}
 		
 		print ("Jumping");
 		this.lastGroundedPosition = this.transform.position;
-		this.rigidBody.AddForce(0, this.JumpStrength, 0);
+		//this.rigidBody.AddForce(0, this.JumpStrength, 0);
 		this.movementState = CharacterMovementState.Jumping;
 		this.levelingTimer = 0;
 	}
@@ -149,7 +146,7 @@ public class CharacterEntity : StageEntity
 			return;
 		}
 		
-		if(this.rigidBody.velocity.y < 0.01f && this.rigidBody.velocity.y > -0.01f)
+		/*if(this.rigidBody.velocity.y < 0.01f && this.rigidBody.velocity.y > -0.01f)
 		{
 			this.levelingTimer++;
 			if(this.levelingTimer > 5)
@@ -164,6 +161,6 @@ public class CharacterEntity : StageEntity
 				print ("Leveling");
 				this.movementState = CharacterMovementState.Leveling;
 			}
-		}
+		}*/
 	}
 }
