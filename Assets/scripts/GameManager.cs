@@ -111,9 +111,9 @@ public class GameManager : MonoBehaviour
 	{
 		if(!this.isAnimating)
 		{
-			GUI.TextArea(this.LivesRect,"Lives: " + this.player1.Lives);
+			/*GUI.TextArea(this.LivesRect,"Lives: " + this.player1.Lives);
 			this.ScoreRect.width = 60 + 5*this.player1.Score.ToString().Length;
-			GUI.TextArea(this.ScoreRect, "Score: " + this.player1.Score);
+			GUI.TextArea(this.ScoreRect, "Score: " + this.player1.Score);*/
 		}
 	}
 	

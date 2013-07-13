@@ -23,6 +23,8 @@ public class CharacterEntity : StageEntity
 	
 	private Vector3 lastGroundedPosition;
 	private Vector2 moveDirection;
+	
+	private bool rotate;
 			
 	// ---------------------------------------------
 	// Public
@@ -41,12 +43,13 @@ public class CharacterEntity : StageEntity
 	
 	public virtual void Start()
 	{
+		this.transform.Rotate(Vector3.up, 180);
 	}
 	
 	public override void Update()
 	{
 		base.Update();
-		
+		print ("Falling");
 		if(this.startPos != null)
 		{
 			this.transform.position = (Vector3)this.startPos;
@@ -131,7 +134,12 @@ public class CharacterEntity : StageEntity
 			}		
 			
 			this.moveDirection = new Vector2(newX, newZ);
-			print (this.moveDirection);
+			bool newState = newX < 0;
+			if((newX < 0 || newX > 0) && this.rotate != newState)
+			{
+				this.rotate = newState;
+				this.transform.Rotate(Vector3.up, 180);
+			}		
 		}
 	}
 	
