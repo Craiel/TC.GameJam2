@@ -9,12 +9,13 @@ public class BallScript : MonoBehaviour {
 	void Start () {
 		int i;
 		
-		for(i=0;i<2;i++)
+		/*for(i=0;i<40;i++)
 		{
+			//var randV = Vector3(transform.position-0.01
 			var newball = (GameObject)Instantiate(ballObject,transform.position,transform.rotation);
 			var rigidball = newball.GetComponent <Rigidbody>();
-			//rigidball.AddForce (-15+Random.Range(0,30),Random.Range(0,10),-15+Random.Range(0,30));
-		}
+			rigidball.AddForce (-15+Random.Range(0,30),Random.Range(0,10),-15+Random.Range(0,30));
+		}*/
 	
 	}
 	
