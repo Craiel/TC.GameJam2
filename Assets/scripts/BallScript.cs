@@ -7,13 +7,14 @@ public class BallScript : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
+		int i;
 		
-		//rigidbody.AddForce (100, 0, 100);
-		//var rand = new Random();
-		//var newball = (GameObject)Instantiate(ballObject,transform.position,transform.rotation);
-		//var rigidball = newball.GetComponent <Rigidbody>();
-		//rigidball.AddForce (-100+(200),Random(10),-100+Random(200));
-		
+		for(i=0;i<2;i++)
+		{
+			var newball = (GameObject)Instantiate(ballObject,transform.position,transform.rotation);
+			var rigidball = newball.GetComponent <Rigidbody>();
+			//rigidball.AddForce (-15+Random.Range(0,30),Random.Range(0,10),-15+Random.Range(0,30));
+		}
 	
 	}
 	
