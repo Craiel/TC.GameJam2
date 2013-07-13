@@ -50,8 +50,10 @@ public class Player : CharacterEntity
 	}
 	
 	// Use this for initialization
-	public void Start () 
+	public override void Start () 
 	{	
+		base.Start();
+		
 		this.mainCamera = Camera.main;
 		this.Health = this.StartingHealth;
 	}
@@ -62,19 +64,19 @@ public class Player : CharacterEntity
 		
 		float newX = Input.GetAxis(ControlPrefix+" Horizontal");
 		float newZ = Input.GetAxis(ControlPrefix+" Vertical");
-		float newY = this.CurrentYPos;
+		//float newY = this.CurrentYPos;
 		
 		float attackState = Input.GetAxis(ControlPrefix+" Attack");
 		float jumpState = Input.GetAxis(ControlPrefix+" Jump");
 		
 		this.CheckAction(attackState > 0, jumpState > 0);
-		transform.position = new Vector3(transform.position.x, newY, transform.position.z);
-		transform.Translate(new Vector3(newX * Speed, 0, newZ * Speed), null);
+		this.MoveCharacter(newX, newZ);
 		
 		if(this.CameraFollows)
 		{
+			this.mainCamera.transform.position = new Vector3(this.transform.position.x, this.mainCamera.transform.position.y, this.mainCamera.transform.position.z);
 			this.mainCamera.transform.LookAt(this.transform);
-			this.mainCamera.transform.Translate(new Vector3(newX, 0, 0), null);
+			//this.mainCamera.transform.Translate(new Vector3(newX, 0, 0), null);
 		}
 	}
 	
