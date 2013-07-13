@@ -88,21 +88,24 @@ public class StageEntity : MonoBehaviour
 		this.CollisionDamage = damage;
 		this.CollisionEnabled = damage > 0.0f;
 	}
-	
-	public void OnTriggerEnter(Collider collider)
+		
+	public virtual void OnTriggerEnter(Collider collider)
 	{
-		this.ProcessCollision(collider);
+		this.HandleCollision(collider);
 	}
 	
-	public void OnTriggerStay(Collider collider)
+	public virtual void OnTriggerStay(Collider collider)
 	{
-		this.ProcessCollision(collider);
+		this.HandleCollision(collider);
 	}
 	
+	public virtual void OnTriggerExit(Collider collider)
+	{
+	}	
 	// ---------------------------------------------
 	// Protected
 	// ---------------------------------------------
-	protected virtual void ProcessCollision(Collider collider)
+	protected virtual void HandleCollision(Collider collider)
 	{
 		StageEntity component = collider.gameObject.GetComponent(typeof(StageEntity)) as StageEntity;
 		if(component != null && component.GetType() != this.GetType())

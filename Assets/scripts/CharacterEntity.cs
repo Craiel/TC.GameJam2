@@ -14,8 +14,10 @@ public enum CharacterMovementState
 
 public class CharacterEntity : StageEntity 
 {		
+	private GameManager gameManager;
+	
 	private Vector3? startPos;
-		
+			
 	private CharacterMovementState movementState;
 	
 	private int levelingTimer;
@@ -43,13 +45,13 @@ public class CharacterEntity : StageEntity
 	
 	public virtual void Start()
 	{
-		this.transform.Rotate(Vector3.up, 180);
+		this.gameManager = Camera.main.GetComponent<GameManager>();
 	}
 	
 	public override void Update()
 	{
 		base.Update();
-		print ("Falling");
+		//print ("Falling");
 		if(this.startPos != null)
 		{
 			this.transform.position = (Vector3)this.startPos;
@@ -67,11 +69,7 @@ public class CharacterEntity : StageEntity
 		}
 		else if (this.movementState != CharacterMovementState.Falling)
 		{
-			/*if(this.rigidBody.velocity.y < -0.01f)
-			{
-				print ("Falling");
-				this.movementState = CharacterMovementState.Falling;
-			}*/
+			// Todo: Check if we are starting to fall here
 		}	
 	}
 	
@@ -83,7 +81,7 @@ public class CharacterEntity : StageEntity
 	public virtual void ForceDeath()
 	{
 	}
-		
+	
 	// ---------------------------------------------
 	// Protected
 	// ---------------------------------------------	
@@ -95,15 +93,15 @@ public class CharacterEntity : StageEntity
 			return;
 		}
 		
-		print ("Jumping");
+		//print ("Jumping");
 		this.lastGroundedPosition = this.transform.position;
-		//this.rigidBody.AddForce(0, this.JumpStrength, 0);
+		// Todo: Add actual jump movement
 		this.movementState = CharacterMovementState.Jumping;
 		this.levelingTimer = 0;
 	}
 	
 	protected void MoveCharacter(float newX, float newZ)
-	{
+	{		
 		if(this.CanMoveInAir || this.movementState == CharacterMovementState.Running || this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Walking)
 		{
 			// Clear out depth movement if we are airborne
@@ -111,27 +109,34 @@ public class CharacterEntity : StageEntity
 			{
 				newZ = 0;
 			}
-			
+						
+			Vector3 newVector;
 			if(this.IsRunning)
 			{
-				print ("Running");
+				//print ("Running");
 				if(this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Walking)
 				{
 					this.movementState = CharacterMovementState.Running;
 				}
 				
-				transform.Translate(new Vector3(newX * this.RunSpeed, 0, newZ * this.RunSpeed), null);
+				newVector = new Vector3(this.CheckXMovementBounds(this.transform.position.x, newX * this.RunSpeed), 
+					0, 
+					this.CheckZMovementBounds(this.transform.position.z, newZ * this.RunSpeed));
 			}
 			else
 			{
-				print ("Walking");
+				//print ("Walking");
 				if(this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Running)
 				{
 					this.movementState = CharacterMovementState.Walking;
 				}
 				
-				transform.Translate(new Vector3(newX * this.Speed, 0, newZ * this.Speed), null);
-			}		
+				newVector = new Vector3(this.CheckXMovementBounds(this.transform.position.x, newX * this.Speed), 
+					0, 
+					this.CheckZMovementBounds(this.transform.position.z, newZ * this.Speed));
+			}
+			
+			transform.Translate(newVector, null);
 			
 			this.moveDirection = new Vector2(newX, newZ);
 			bool newState = newX < 0;
@@ -143,6 +148,15 @@ public class CharacterEntity : StageEntity
 		}
 	}
 	
+	protected override void HandleCollision(Collider collider)
+	{
+	}
+	
+	
+	
+	// ---------------------------------------------
+	// Protected
+	// ---------------------------------------------	
 	private void UpdateAirState()
 	{
 		transform.Translate(new Vector3(this.moveDirection.x * AirSpeed, 0, this.moveDirection.y * AirSpeed), null);
@@ -154,21 +168,41 @@ public class CharacterEntity : StageEntity
 			return;
 		}
 		
-		/*if(this.rigidBody.velocity.y < 0.01f && this.rigidBody.velocity.y > -0.01f)
+		// Todo: Check the state of air and move us into level or idle
+	}
+	
+	private float CheckXMovementBounds(float origin, float translation)
+	{
+		if((origin + translation) < this.gameManager.StageBounds.x && translation < 0)
 		{
-			this.levelingTimer++;
-			if(this.levelingTimer > 5)
-			{
-				print ("Idle");
-				this.movementState = CharacterMovementState.Idle;
-				return;
-			} 
-			
-			if(this.movementState == CharacterMovementState.Jumping)
-			{
-				print ("Leveling");
-				this.movementState = CharacterMovementState.Leveling;
-			}
-		}*/
+			this.transform.position = this.transform.position + new Vector3(Mathf.Abs(translation), 0, 0);
+			//return this.gameManager.StageBounds.x;
+		}
+		
+		if((origin + translation) > this.gameManager.StageBounds.width && translation > 0)
+		{
+			this.transform.position = this.transform.position - new Vector3(translation, 0, 0);
+			//return this.gameManager.StageBounds.width;
+		}
+		
+		return translation;
+	}
+	
+	private float CheckZMovementBounds(float origin, float translation)
+	{
+		print (origin+translation+" "+translation+ " -- "+this.gameManager.StageBounds);
+		if((origin + translation) < this.gameManager.StageBounds.y && translation < 0)
+		{
+			this.transform.position = this.transform.position + new Vector3(0, 0, Mathf.Abs(translation));
+			//return this.gameManager.StageBounds.y;
+		}
+		
+		if((origin + translation) > this.gameManager.StageBounds.height && translation > 0)
+		{
+			this.transform.position = this.transform.position - new Vector3(0, 0, translation);
+			//return this.gameManager.StageBounds.height;
+		}
+		
+		return translation;
 	}
 }

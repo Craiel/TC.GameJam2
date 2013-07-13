@@ -30,6 +30,7 @@ public class GameManager : MonoBehaviour
 	
 	public Rect LivesRect;
 	public Rect ScoreRect;
+	public Rect StageBounds;
 		
 	public TextMesh MessageText = null;
 	
