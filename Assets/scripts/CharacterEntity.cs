@@ -109,7 +109,8 @@ public class CharacterEntity : StageEntity
 			{
 				newZ = 0;
 			}
-			
+						
+			Vector3 newVector;
 			if(this.IsRunning)
 			{
 				//print ("Running");
@@ -118,7 +119,9 @@ public class CharacterEntity : StageEntity
 					this.movementState = CharacterMovementState.Running;
 				}
 				
-				transform.Translate(new Vector3(newX * this.RunSpeed, 0, newZ * this.RunSpeed), null);
+				newVector = new Vector3(this.CheckXMovementBounds(this.transform.position.x, newX * this.RunSpeed), 
+					0, 
+					this.CheckZMovementBounds(this.transform.position.z, newZ * this.RunSpeed));
 			}
 			else
 			{
@@ -128,8 +131,12 @@ public class CharacterEntity : StageEntity
 					this.movementState = CharacterMovementState.Walking;
 				}
 				
-				transform.Translate(new Vector3(newX * this.Speed, 0, newZ * this.Speed), null);
-			}		
+				newVector = new Vector3(this.CheckXMovementBounds(this.transform.position.x, newX * this.Speed), 
+					0, 
+					this.CheckZMovementBounds(this.transform.position.z, newZ * this.Speed));
+			}
+			
+			transform.Translate(newVector, null);
 			
 			this.moveDirection = new Vector2(newX, newZ);
 			bool newState = newX < 0;
@@ -144,6 +151,8 @@ public class CharacterEntity : StageEntity
 	protected override void HandleCollision(Collider collider)
 	{
 	}
+	
+	
 	
 	// ---------------------------------------------
 	// Protected
@@ -160,5 +169,40 @@ public class CharacterEntity : StageEntity
 		}
 		
 		// Todo: Check the state of air and move us into level or idle
+	}
+	
+	private float CheckXMovementBounds(float origin, float translation)
+	{
+		if((origin + translation) < this.gameManager.StageBounds.x && translation < 0)
+		{
+			this.transform.position = this.transform.position + new Vector3(Mathf.Abs(translation), 0, 0);
+			//return this.gameManager.StageBounds.x;
+		}
+		
+		if((origin + translation) > this.gameManager.StageBounds.width && translation > 0)
+		{
+			this.transform.position = this.transform.position - new Vector3(translation, 0, 0);
+			//return this.gameManager.StageBounds.width;
+		}
+		
+		return translation;
+	}
+	
+	private float CheckZMovementBounds(float origin, float translation)
+	{
+		print (origin+translation+" "+translation+ " -- "+this.gameManager.StageBounds);
+		if((origin + translation) < this.gameManager.StageBounds.y && translation < 0)
+		{
+			this.transform.position = this.transform.position + new Vector3(0, 0, Mathf.Abs(translation));
+			//return this.gameManager.StageBounds.y;
+		}
+		
+		if((origin + translation) > this.gameManager.StageBounds.height && translation > 0)
+		{
+			this.transform.position = this.transform.position - new Vector3(0, 0, translation);
+			//return this.gameManager.StageBounds.height;
+		}
+		
+		return translation;
 	}
 }
