@@ -14,18 +14,25 @@ public class SplatScript : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		
-		if(transform.localScale.x>1.2f)
-		{
-        	transform.Translate(Vector3.down * Time.deltaTime*0.125f, Space.World);
-			
-		}
-		
 		transform.localScale += new Vector3(currentScale, 0.0f, currentScale);
 		
 		if(currentScale>0.0035f)
 		{
 			currentScale=currentScale*0.85f;
 		}
+		
+		
+		if(transform.localScale.x>1.2f)
+		{
+        	transform.Translate(Vector3.down * Time.deltaTime*0.125f, Space.World);
+			
+			if(transform.position.y<0.4f)
+			{
+				Destroy(gameObject);
+				Debug.Log ("destroyed");
+			}
+		}
+		
 		
 	}
 }
