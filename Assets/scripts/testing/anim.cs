@@ -30,10 +30,12 @@ public class anim : MonoBehaviour {
 			{
 				this.comboDelay = 0;
 				this.comboStage++;
-				if(this.comboStage > 3)
+				
+				if(this.comboStage > 5)
 				{
 					this.comboStage = 0;
 					this.inCombo = false;
+					this.animator.SetBool("AbortCombo", true);
 				}
 			} 
 			else if (!this.inCombo)
@@ -41,12 +43,14 @@ public class anim : MonoBehaviour {
 				this.comboDelay = 0;
 				this.comboStage = 1;
 				this.inCombo = true;
+				this.animator.SetBool("AbortCombo", false);
 			}
 		} else
 		{
 			if(this.comboDelay > 5f)
 			{
 				this.comboStage = 0;
+				this.animator.SetBool("AbortCombo", true);
 			}
 		}
 		
