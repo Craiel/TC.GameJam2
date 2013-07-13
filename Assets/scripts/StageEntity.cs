@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class ActiveEntity : MonoBehaviour 
+public class StageEntity : MonoBehaviour 
 {
 	public delegate void NotifyDelegate();
 		
@@ -104,7 +104,7 @@ public class ActiveEntity : MonoBehaviour
 	// ---------------------------------------------
 	protected virtual void ProcessCollision(Collider collider)
 	{
-		ActiveEntity component = collider.gameObject.GetComponent(typeof(ActiveEntity)) as ActiveEntity;
+		StageEntity component = collider.gameObject.GetComponent(typeof(StageEntity)) as StageEntity;
 		if(component != null && component.GetType() != this.GetType())
 		{
 			if(!component.CollisionEnabled)

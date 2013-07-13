@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
 	
 	private const int ENEMY_COUNT = 10;
 	private Enemy[] enemies = new Enemy[ENEMY_COUNT];
-	private List<ActiveEntity> destroyableObjects = new List<ActiveEntity>();
+	private List<StageEntity> destroyableObjects = new List<StageEntity>();
 	
 	private int maxLives = 3;	
 	

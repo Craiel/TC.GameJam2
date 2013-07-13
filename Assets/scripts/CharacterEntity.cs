@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class CharacterEntity : ActiveEntity 
+public class CharacterEntity : StageEntity 
 {	
 	private Vector3? startPos;
 	
@@ -55,6 +55,7 @@ public class CharacterEntity : ActiveEntity
 	
 	public void OnCollisionEnter(Collision collision)
 	{
+		print ("OnCollisionEnter" + collision);
 		foreach(var contact in collision.contacts)
 		{
 			Debug.DrawRay(contact.point, contact.normal, Color.white);
