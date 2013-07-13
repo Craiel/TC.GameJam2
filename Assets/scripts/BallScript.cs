@@ -10,7 +10,9 @@ public class BallScript : MonoBehaviour {
 		
 		//rigidbody.AddForce (100, 0, 100);
 		
-		var newball = Instantiate(ballObject,transform.position,transform.rotation);
+		//GameObject newball = Instantiate(ballObject,transform.position,transform.rotation);
+		//newball.rigidbody.AddForce (-100+Random(200),Random(10),-100+Random(200));
+		
 	
 	}
 	
