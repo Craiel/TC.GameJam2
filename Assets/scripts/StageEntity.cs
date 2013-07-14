@@ -63,12 +63,7 @@ public class StageEntity : MonoBehaviour
 		this.health -= damage;
 		if(this.health <= 0)
 		{
-			this.isDead = true;
-			if(this.OnDying != null)
-			{
-				this.OnDying();
-			}
-			
+			this.Die();
 			return;
 		}
 		
@@ -105,6 +100,15 @@ public class StageEntity : MonoBehaviour
 	// ---------------------------------------------
 	// Protected
 	// ---------------------------------------------
+	protected virtual void Die()
+	{
+		this.isDead = true;
+		if(this.OnDying != null)
+		{
+			this.OnDying();
+		}
+	}
+	
 	protected virtual void HandleCollision(Collider collider)
 	{
 		StageEntity component = collider.gameObject.GetComponent(typeof(StageEntity)) as StageEntity;

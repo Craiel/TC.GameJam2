@@ -7,6 +7,9 @@ public class Player : CharacterEntity
 	
 	private int score;
 	private int lives;
+	
+	private int currentChain = 0;
+	private bool comboDidHit = false;
 		
 	public Player()
 	{
@@ -76,7 +79,17 @@ public class Player : CharacterEntity
 
 		if(attackAction)
 		{
-			this.EnterCombat(0);
+			if(this.InCombat && this.comboDidHit)
+			{
+				this.currentChain++;
+			}
+			if(this.currentChain >= this.ComboChain.Length)
+			{
+				this.currentChain = 0;
+			}
+			
+			this.comboDidHit = false;
+			this.EnterCombat(this.currentChain);
 		}
 						
 		/*Animation anim = this.GetComponent<Animation>();
@@ -119,7 +132,7 @@ public class Player : CharacterEntity
 		
 		// Update movement and cam
 		this.MoveCharacter(newX, newZ);
-				
+		
 		if(this.CameraFollows && this.MovementState != CharacterMovementState.Falling)
 		{
 			this.mainCamera.transform.position = new Vector3(this.transform.position.x, this.mainCamera.transform.position.y, this.mainCamera.transform.position.z);
@@ -135,6 +148,7 @@ public class Player : CharacterEntity
 		base.ResolveCombat(target, targetData);
 		
 		this.CurrentTarget = target;
+		this.comboDidHit = true;
 		
 		if(targetData.IsDead)
 		{
@@ -144,6 +158,9 @@ public class Player : CharacterEntity
 	
 	protected override void LeaveCombat ()
 	{
+		base.LeaveCombat();
+		
+		this.comboDidHit = false;
 		this.CurrentTarget = null;
 	}
 	
