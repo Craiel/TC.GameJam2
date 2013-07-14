@@ -73,6 +73,12 @@ public class CharacterEntity : StageEntity
 	public float CombatTimeout = 2;
 	
 	public Texture2D Portrait;
+	
+	public AudioClip SFXCombatMiss;
+	public AudioClip SFXJump;
+	public AudioClip SFXLand;
+	public AudioClip SFXFalling;
+	public AudioClip[] SFXComboChain;
 		
 	public bool IsAirborne
 	{
@@ -199,6 +205,11 @@ public class CharacterEntity : StageEntity
 		}
 		
 		//print ("Jumping");
+		if(this.SFXJump != null)
+		{
+			audio.PlayOneShot(this.SFXJump);
+		}
+		
 		this.lastGroundedPosition = this.transform.position;
 		this.upVelocity = this.JumpStrength;
 		this.MovementState = CharacterMovementState.Jumping;
@@ -267,6 +278,11 @@ public class CharacterEntity : StageEntity
 				{
 					this.upVelocity = -drag.GetComponent<DragObject>().Pull;
 					this.MovementState = CharacterMovementState.Falling;
+					if(this.SFXFalling != null)
+					{
+						audio.PlayOneShot(this.SFXFalling);
+					}
+					
 					wasDragged = true;
 				}
 			}
@@ -284,7 +300,7 @@ public class CharacterEntity : StageEntity
 			{
 				this.rotate = newState;
 				this.transform.Rotate(Vector3.up, 180);
-			}		
+			}
 		}
 	}
 	
@@ -330,6 +346,11 @@ public class CharacterEntity : StageEntity
 		if(this.transform.position.y < this.baseY && this.MovementState == CharacterMovementState.Landing)
 		{
 			print ("Landed");
+			if(this.SFXJump != null)
+			{
+				audio.PlayOneShot(this.SFXLand);
+			}
+			
 			this.upVelocity = 0;
 			this.transform.position = new Vector3(this.transform.position.x, this.baseY, this.transform.position.z);
 			this.MovementState = CharacterMovementState.Idle;
