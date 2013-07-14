@@ -1,5 +1,4 @@
 *.blend?
-metadata
 Temp
 TestBuilds
 ScriptAssemblies
@@ -15,3 +14,4 @@ Builds
 /GameJam-csharp.sln
 /GameJam.sln
 /GameJam.userprefs
+/bin

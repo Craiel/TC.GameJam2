@@ -12,8 +12,6 @@ public class GameManager : MonoBehaviour
 	private float animatingDuration = 3.0f;
 	private Vector3 animatingStartPoint = Vector3.zero;
 	
-	private const int ENEMY_COUNT = 10;
-	private Enemy[] enemies = new Enemy[ENEMY_COUNT];
 	private List<StageEntity> destroyableObjects = new List<StageEntity>();
 	
 	private int maxLives = 3;	
@@ -22,34 +20,47 @@ public class GameManager : MonoBehaviour
 	private float textAnimationTime = 2.0f;
 	private float textAnimationStartTime = 0.0f;
 	
-	public GameObject Player1 = null;
-	public GameObject Player2 = null;
+	private GameObject Player1Model;
+	private GameObject Player2Model;
 	
 	public Vector3 SpawnPositionPlayer1 = Vector3.zero;
 	public Vector3 SpawnPositionPlayer2 = Vector3.zero;
 	
 	public Rect LivesRect;
 	public Rect ScoreRect;
+	public Rect StageBounds;
+	
+	public float FallDamage = 10;
 		
 	public TextMesh MessageText = null;
 	
+	public List<GameObject> CollidingGeometry;
+	public List<GameObject> DragEntries;
+	public List<GameObject> Enemies;
+	
 	// ---------------------------------------------
 	// Public
-	// ---------------------------------------------
+	// ---------------------------------------------		
 	public void Start()
 	{
-		this.player1 = Player1.GetComponent<Player>();
-		this.player1.OnDying += OnPlayerDying;
+		print ("Starting");
+		if(SceneState.Instance.Player1 != null)
+		{
+			this.Player1Model = Instantiate(Resources.Load(SceneState.Instance.Player1), this.SpawnPositionPlayer1, Quaternion.identity) as GameObject;
+			this.player1 = this.Player1Model.GetComponent<Player>();
+			this.player1.CameraFollows = true;
+			this.player1.OnDying += OnPlayerDying;
+		}
 		
-		this.player2 = Player2.GetComponent<Player>();
-		this.player2.OnDying += OnPlayerDying;
-	}
-	
-	public void StartGame()
-	{
-		this.Player1.transform.localPosition = SpawnPositionPlayer1;
-		this.Player2.transform.localPosition = SpawnPositionPlayer2;
-		
+		if(SceneState.Instance.Player2 != null)
+		{
+			this.Player2Model = Instantiate(Resources.Load(SceneState.Instance.Player2), this.SpawnPositionPlayer2, Quaternion.identity) as GameObject;
+			this.player2 = this.Player2Model.GetComponent<Player>();
+			this.player2.OnDying += OnPlayerDying;
+			this.player2.ControlPrefix = "Player2";
+		}
+			
+		print ("animate");
 		this.Animate();
 	}
 	
@@ -99,19 +110,15 @@ public class GameManager : MonoBehaviour
 		{
 			Application.Quit();
 		}
-		else if(Input.GetKeyDown(KeyCode.R))
-		{
-			this.StartGame();
-		}
 	}
 		
 	void OnGUI()
 	{
 		if(!this.isAnimating)
 		{
-			GUI.TextArea(this.LivesRect,"Lives: " + this.player1.Lives);
+			/*GUI.TextArea(this.LivesRect,"Lives: " + this.player1.Lives);
 			this.ScoreRect.width = 60 + 5*this.player1.Score.ToString().Length;
-			GUI.TextArea(this.ScoreRect, "Score: " + this.player1.Score);
+			GUI.TextArea(this.ScoreRect, "Score: " + this.player1.Score);*/
 		}
 	}
 	
@@ -120,10 +127,6 @@ public class GameManager : MonoBehaviour
 		if((this.player1 == null || this.player1.IsDead) && (this.player2 == null || this.player2.IsDead))
 		{
 			ShowText("GAME OVER	\nr to restart", false);
-		}
-		else
-		{
-			this.StartGame();
 		}
 	}
 	
