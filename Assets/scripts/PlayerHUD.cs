@@ -25,7 +25,10 @@ public class PlayerHUD : MonoBehaviour
 		
 	public void Start()
 	{
-		this.player = this.Player.GetComponent<Player>();
+		if(this.Player != null)
+		{
+			this.player = this.Player.GetComponent<Player>();
+		}
 	}
 	
 	public void OnGUI()

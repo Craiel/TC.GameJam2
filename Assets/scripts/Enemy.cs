@@ -16,10 +16,9 @@ public class Enemy : CharacterEntity
 	{
 		base.Update();
 		
-		if(this.IsDead)
+		if(this.IsDead && this.GameManager.Enemies.Contains(this.gameObject))
 		{
 			this.GameManager.Enemies.Remove(this.gameObject);
-			Destroy(this.gameObject);
 		}
 	}
 }

@@ -41,6 +41,8 @@ public class GameManager : MonoBehaviour
 	public GameObject Player1HUD;
 	public GameObject Player2HUD;
 	
+	public AudioClip Music;
+	
 	// ---------------------------------------------
 	// Public
 	// ---------------------------------------------		
@@ -63,6 +65,11 @@ public class GameManager : MonoBehaviour
 			this.player2.OnDying += OnPlayerDying;
 			this.player2.ControlPrefix = "Player2";
 			this.Player2HUD.GetComponent<PlayerHUD>().Player = this.player2.gameObject;
+		}
+		
+		if(this.Music != null)
+		{
+			audio.PlayOneShot(this.Music);
 		}
 			
 		print ("animate");
