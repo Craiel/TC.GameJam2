@@ -36,11 +36,9 @@ public class CharacterEntity : StageEntity
 	public float AirSpeed = 1.0f;
 	
 	public float JumpStrength = 3.0f;
-	public float JumpFalloff = 1.0f;
+	public float Gravity = 1.0f;
 	public float TerminalVelocity = -0.5f;
-	
-	public float DragBoundary = 0.5f;
-	
+		
 	public float DeathDepth = -3;
 	
 	public bool CanMoveInAir = false;
@@ -68,10 +66,6 @@ public class CharacterEntity : StageEntity
 		if(this.MovementState == CharacterMovementState.Jumping || this.MovementState == CharacterMovementState.Falling || this.MovementState == CharacterMovementState.Leveling)
 		{
 			this.UpdateAirState();
-		}
-		else if (this.MovementState != CharacterMovementState.Falling)
-		{
-			// Todo: Check if we are starting to fall here
 		}
 	}
 	
@@ -143,6 +137,7 @@ public class CharacterEntity : StageEntity
 				}
 			}
 			
+			// Test if we are moving into a drag entry
 			bool wasDragged = false;
 			foreach(var drag in this.gameManager.DragEntries)
 			{
@@ -188,7 +183,7 @@ public class CharacterEntity : StageEntity
 			return;
 		}
 		
-		this.upVelocity -= this.JumpFalloff;
+		this.upVelocity -= this.Gravity;
 		if(this.upVelocity < this.TerminalVelocity)
 		{
 			this.upVelocity = this.TerminalVelocity;

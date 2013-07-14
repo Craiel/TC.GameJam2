@@ -104,8 +104,7 @@ public class Player : CharacterEntity
 			print ("Combo completed");
 			currentComboProgress = -1;
 			anim.CrossFadeQueued("Idling",0.5f);
-		}
-			
+		}			
 		
 		// Jump?
 		if(jumpAction)
@@ -116,7 +115,7 @@ public class Player : CharacterEntity
 		// Update movement and cam
 		this.MoveCharacter(newX, newZ);
 				
-		if(this.CameraFollows)
+		if(this.CameraFollows && this.MovementState != CharacterMovementState.Falling)
 		{
 			this.mainCamera.transform.position = new Vector3(this.transform.position.x, this.mainCamera.transform.position.y, this.mainCamera.transform.position.z);
 			if(this.CameraFollowsY)
