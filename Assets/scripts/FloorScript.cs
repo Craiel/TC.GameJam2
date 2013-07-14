@@ -17,7 +17,11 @@ public class FloorScript : MonoBehaviour {
 	
 	// Destroy everything that enters the trigger
     void OnTriggerEnter(Collider other) {
-        
+        if(other.GetComponent<CharacterEntity>() != null)
+		{
+			return;
+		}
+		
 		Debug.Log ("Disappeared!");
 		
 		var splatpos = new Vector3(other.attachedRigidbody.transform.position.x,0.5f,other.attachedRigidbody.transform.position.z);
