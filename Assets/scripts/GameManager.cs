@@ -34,9 +34,12 @@ public class GameManager : MonoBehaviour
 		
 	public TextMesh MessageText = null;
 	
-	public List<GameObject> CollidingGeometry;
-	public List<GameObject> DragEntries;
-	public List<GameObject> Enemies;
+	public List<GameObject> CollidingGeometry = new List<GameObject>();
+	public List<GameObject> DragEntries = new List<GameObject>();
+	public List<GameObject> Enemies = new List<GameObject>();
+	
+	public GameObject Player1HUD;
+	public GameObject Player2HUD;
 	
 	// ---------------------------------------------
 	// Public
@@ -50,6 +53,7 @@ public class GameManager : MonoBehaviour
 			this.player1 = this.Player1Model.GetComponent<Player>();
 			this.player1.CameraFollows = true;
 			this.player1.OnDying += OnPlayerDying;
+			this.Player1HUD.GetComponent<PlayerHUD>().Player = this.player1.gameObject;
 		}
 		
 		if(SceneState.Instance.Player2 != null)
@@ -58,6 +62,7 @@ public class GameManager : MonoBehaviour
 			this.player2 = this.Player2Model.GetComponent<Player>();
 			this.player2.OnDying += OnPlayerDying;
 			this.player2.ControlPrefix = "Player2";
+			this.Player2HUD.GetComponent<PlayerHUD>().Player = this.player2.gameObject;
 		}
 			
 		print ("animate");
