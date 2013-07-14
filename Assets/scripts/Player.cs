@@ -7,6 +7,9 @@ public class Player : CharacterEntity
 	
 	private int score;
 	private int lives;
+	
+	private int currentChain = 0;
+	private bool comboDidHit = false;
 		
 	public Player()
 	{
@@ -16,14 +19,12 @@ public class Player : CharacterEntity
 	// ---------------------------------------------
 	// Public
 	// ---------------------------------------------
-	public int StartingHealth = 100;
-	
 	public string ControlPrefix = "Player1";
 	
 	public bool CameraFollows = false;
 	public bool CameraFollowsY = false;	
 	
-	public Texture2D Portrait;
+	public GameObject CurrentTarget { get; set; }
 	
 	public int Score
 	{
@@ -63,7 +64,6 @@ public class Player : CharacterEntity
 		base.Start();
 		
 		this.mainCamera = Camera.main;
-		this.Health = this.StartingHealth;
 	}
 	
 	public override void Update()
@@ -79,7 +79,17 @@ public class Player : CharacterEntity
 
 		if(attackAction)
 		{
-			this.SetCombat(0);
+			if(this.InCombat && this.comboDidHit)
+			{
+				this.currentChain++;
+			}
+			if(this.currentChain >= this.ComboChain.Length)
+			{
+				this.currentChain = 0;
+			}
+			
+			this.comboDidHit = false;
+			this.EnterCombat(this.currentChain);
 		}
 						
 		/*Animation anim = this.GetComponent<Animation>();
@@ -122,7 +132,7 @@ public class Player : CharacterEntity
 		
 		// Update movement and cam
 		this.MoveCharacter(newX, newZ);
-				
+		
 		if(this.CameraFollows && this.MovementState != CharacterMovementState.Falling)
 		{
 			this.mainCamera.transform.position = new Vector3(this.transform.position.x, this.mainCamera.transform.position.y, this.mainCamera.transform.position.z);
@@ -133,10 +143,32 @@ public class Player : CharacterEntity
 		}
 	}
 	
+	protected override void ResolveCombat(GameObject target, Enemy targetData)
+	{
+		base.ResolveCombat(target, targetData);
+		
+		this.CurrentTarget = target;
+		this.comboDidHit = true;
+		
+		if(targetData.IsDead)
+		{
+			this.score += targetData.ScoreReward;
+		}
+	}
+	
+	protected override void LeaveCombat ()
+	{
+		base.LeaveCombat();
+		
+		this.comboDidHit = false;
+		this.CurrentTarget = null;
+	}
+	
 	private bool ableToAttack() {
 		return this.MovementState == CharacterMovementState.Idle
 			|| this.MovementState == CharacterMovementState.Walking;
 	}
+	
 	
 	/*private bool startingNewAttack() {
 		return currentComboProgress == -1;
@@ -154,9 +186,4 @@ public class Player : CharacterEntity
 		return currentComboProgress == comboChain.Length;
 	}*/
 
-	private void UpdateVisuals()
-	{
-		// Todo:
-		// 
-	}
 }

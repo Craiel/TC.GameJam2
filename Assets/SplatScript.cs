@@ -29,7 +29,7 @@ public class SplatScript : MonoBehaviour {
 			if(transform.position.y<0.4f)
 			{
 				Destroy(gameObject);
-				Debug.Log ("destroyed");
+				//Debug.Log ("destroyed");
 			}
 		}
 		
