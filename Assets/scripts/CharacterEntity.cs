@@ -28,6 +28,7 @@ public class CharacterEntity : StageEntity
 	
 	private float upVelocity;
 	private float baseY;
+	private float comboDelay;
 	
 	private int currentComboProgress = -1;
 	private float idleDelay = 0;
@@ -81,10 +82,10 @@ public class CharacterEntity : StageEntity
 	public string Name = "No Name";
 	
 	public string[] ComboChain = null;
+	public float[] ComboDelay;
+	public float[] ComboForce;
 	public float CombatTimeout = 2;
-	public float HitForce = 1.0f;
 	public float HitReach = 1.0f;
-	
 	public float DeathTimer = 3;
 	
 	public Texture2D Portrait;
@@ -109,6 +110,13 @@ public class CharacterEntity : StageEntity
 		}
 	}
 	
+	public bool IsComboLocked
+	{
+		get{
+			return this.comboDelay > 0;
+		}
+	}
+	
 	public virtual void Start()
 	{
 		this.gameManager = Camera.main.GetComponent<GameManager>();
@@ -117,6 +125,25 @@ public class CharacterEntity : StageEntity
 		
 		this.baseY = this.transform.position.y;
 		this.Health = this.StartingHealth;
+		
+		if(this.ComboDelay == null)
+		{
+			this.ComboDelay = new float[this.ComboChain.Length];
+		}
+		
+		if(this.ComboForce == null)
+		{
+			this.ComboForce = new float[this.ComboChain.Length];
+		}
+		
+		if(this.ComboAnimationSpeeds == null)
+		{
+			this.ComboAnimationSpeeds = new float[this.ComboChain.Length];
+			for(int i=0;i<this.ComboChain.Length;i++)
+			{
+				this.ComboAnimationSpeeds[i] = 1;
+			}
+		}
 	}
 	
 	public override void Update()
@@ -140,6 +167,12 @@ public class CharacterEntity : StageEntity
 			}
 			
 			this.UpdateAnimationState();
+			return;
+		}
+		
+		if(this.IsComboLocked)
+		{
+			this.comboDelay -= 0.1f;
 			return;
 		}
 				
@@ -193,6 +226,11 @@ public class CharacterEntity : StageEntity
 	
 	public void OnChildCollisionStay(Collider child, Collider collider, bool indicatorOnly)
 	{
+		/*if(this.IsComboLocked)
+		{
+			return;
+		}*/
+		
 		var target = collider.GetComponent<Enemy>();
 		if(!this.InCombat || target == null || target.IsDead || !this.allowHit)
 		{
@@ -241,7 +279,7 @@ public class CharacterEntity : StageEntity
 	protected void EnterCombat(int comboStage)
 	{
 		// Check if we are in air lock mode, no combat then
-		if(this.lockAirAnimation)
+		if(this.lockAirAnimation || this.IsComboLocked)
 		{
 			return;
 		}
@@ -305,6 +343,12 @@ public class CharacterEntity : StageEntity
 		
 	protected void MoveCharacter(float newX, float newZ)
 	{	
+		// Lock movement while in combo delay
+		if(this.IsComboLocked)
+		{
+			return;
+		}
+		
 		// Skip out of 0 movement requests
 		if(Mathf.Abs(newX) < Mathf.Epsilon && Mathf.Abs(newZ) < Mathf.Epsilon)
 		{
@@ -545,6 +589,7 @@ public class CharacterEntity : StageEntity
 			this.PlayAnimation(this.ComboChain[this.comboStage], true, false, this.ComboAnimationSpeeds[this.comboStage]);
 			this.playComboAnimation = false;
 			this.lastAnimationWasCombat = true;
+			this.comboDelay = this.ComboDelay[this.comboStage];
 			return;
 		}
 		

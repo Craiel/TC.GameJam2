@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Player : CharacterEntity 
 {	
@@ -10,6 +11,8 @@ public class Player : CharacterEntity
 	
 	private int currentChain = 0;
 	private bool comboDidHit = false;
+	
+	private List<GameObject> hitTest = new List<GameObject>();
 		
 	public Player()
 	{
@@ -70,6 +73,11 @@ public class Player : CharacterEntity
 	{
 		base.Update();
 		
+		if(this.IsComboLocked)
+		{
+			return;
+		}
+		
 		float newX = Input.GetAxis(ControlPrefix+" Horizontal");
 		float newZ = Input.GetAxis(ControlPrefix+" Vertical");
 		//float newY = this.CurrentYPos;
@@ -89,6 +97,7 @@ public class Player : CharacterEntity
 			}
 			
 			this.comboDidHit = false;
+			this.hitTest.Clear();
 			this.EnterCombat(this.currentChain);
 		}
 						
@@ -145,10 +154,24 @@ public class Player : CharacterEntity
 	
 	protected override void ResolveCombat(GameObject target, Enemy targetData)
 	{
+		if(this.hitTest.Contains(target))
+		{
+			return;
+		}
+		
 		base.ResolveCombat(target, targetData);
 		
 		this.CurrentTarget = target;
 		this.comboDidHit = true;
+		this.hitTest.Add(target);
+		
+		if(this.ComboForce[this.currentChain] > 0)
+		{
+			print (this.ComboForce[this.currentChain]);
+			Vector3 direction = (target.transform.position - this.transform.position).normalized;
+			direction.y = 0;
+			target.transform.Translate(direction * this.ComboForce[this.currentChain]);
+		}
 		
 		if(targetData.IsDead)
 		{
