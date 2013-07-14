@@ -22,7 +22,7 @@ public class FloorScript : MonoBehaviour {
 			return;
 		}
 		
-		Debug.Log ("Disappeared!");
+		//Debug.Log ("Disappeared!");
 		
 		var splatpos = new Vector3(other.attachedRigidbody.transform.position.x,0.5f,other.attachedRigidbody.transform.position.z);
 		var splatrot = new Quaternion(0,0,0,0);
