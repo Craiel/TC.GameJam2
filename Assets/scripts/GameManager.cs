@@ -12,8 +12,6 @@ public class GameManager : MonoBehaviour
 	private float animatingDuration = 3.0f;
 	private Vector3 animatingStartPoint = Vector3.zero;
 	
-	private const int ENEMY_COUNT = 10;
-	private Enemy[] enemies = new Enemy[ENEMY_COUNT];
 	private List<StageEntity> destroyableObjects = new List<StageEntity>();
 	
 	private int maxLives = 3;	
@@ -31,11 +29,14 @@ public class GameManager : MonoBehaviour
 	public Rect LivesRect;
 	public Rect ScoreRect;
 	public Rect StageBounds;
+	
+	public float FallDamage = 10;
 		
 	public TextMesh MessageText = null;
 	
 	public List<GameObject> CollidingGeometry;
 	public List<GameObject> DragEntries;
+	public List<GameObject> Enemies;
 	
 	// ---------------------------------------------
 	// Public
