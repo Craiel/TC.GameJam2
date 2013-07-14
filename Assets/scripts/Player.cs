@@ -8,18 +8,22 @@ public class Player : CharacterEntity
 	private int score;
 	private int lives;
 		
+	public Player()
+	{
+		this.ComboChain = new string[]{ "Punch", "Second_punch", "Elbow", "Knee", "Breaker" };
+	}
+	
 	// ---------------------------------------------
 	// Public
 	// ---------------------------------------------
-	public float StartingHealth = 100.0f;
+	public int StartingHealth = 100;
 	
 	public string ControlPrefix = "Player1";
 	
 	public bool CameraFollows = false;
-	public bool CameraFollowsY = false;
-
-	private int currentComboProgress = -1;
-	public string[] comboChain = new string[]{ "Punch", "Second_punch", "Elbow", "Knee", "Breaker" };
+	public bool CameraFollowsY = false;	
+	
+	public Texture2D Portrait;
 	
 	public int Score
 	{
@@ -73,8 +77,12 @@ public class Player : CharacterEntity
 		bool attackAction = Input.GetButtonDown(ControlPrefix + " Attack");
 		bool jumpAction = Input.GetButtonDown(ControlPrefix + " Jump");
 
-		
-		Animation anim = this.GetComponent<Animation>();
+		if(attackAction)
+		{
+			this.SetCombat(0);
+		}
+						
+		/*Animation anim = this.GetComponent<Animation>();
 
 		// Update anims
 		if(this.MovementState == CharacterMovementState.Idle && !anim.isPlaying) 
@@ -104,7 +112,7 @@ public class Player : CharacterEntity
 			print ("Combo completed");
 			currentComboProgress = -1;
 			anim.CrossFadeQueued("Idling",0.5f);
-		}			
+		}			*/
 		
 		// Jump?
 		if(jumpAction)
@@ -130,7 +138,7 @@ public class Player : CharacterEntity
 			|| this.MovementState == CharacterMovementState.Walking;
 	}
 	
-	private bool startingNewAttack() {
+	/*private bool startingNewAttack() {
 		return currentComboProgress == -1;
 	}
 	
@@ -144,7 +152,7 @@ public class Player : CharacterEntity
 	
 	private bool comboCompleted() {
 		return currentComboProgress == comboChain.Length;
-	}
+	}*/
 
 	private void UpdateVisuals()
 	{
