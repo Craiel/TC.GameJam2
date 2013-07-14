@@ -28,6 +28,7 @@ public class CharacterEntity : StageEntity
 	
 	private float upVelocity;
 	private float baseY;
+	private float comboDelay;
 	
 	private int currentComboProgress = -1;
 	private float idleDelay = 0;
@@ -38,8 +39,12 @@ public class CharacterEntity : StageEntity
 	private bool allowAirCombatAnim = false;
 	private bool lockAirAnimation = false;
 	private bool playComboAnimation = false;
+	private bool forceComboAnimation = false;
 	
 	private string lastAnimationPlayed;
+	private bool lastAnimationWasCombat;
+	private bool queueNextCombat = false;
+	private int queuedComboStage = 0;
 			
 	// ---------------------------------------------
 	// Public
@@ -54,6 +59,7 @@ public class CharacterEntity : StageEntity
 	public float TerminalVelocity = -0.5f;
 	
 	public float AnimationSpeed = 1.0f;
+	public float[] ComboAnimationSpeeds;
 	public float AnimationFadeTime = 0.4f;
 	
 	public float IdleTime = 0.5f;
@@ -76,8 +82,10 @@ public class CharacterEntity : StageEntity
 	public string Name = "No Name";
 	
 	public string[] ComboChain = null;
+	public float[] ComboDelay;
+	public float[] ComboForce;
 	public float CombatTimeout = 2;
-	
+	public float HitReach = 1.0f;
 	public float DeathTimer = 3;
 	
 	public Texture2D Portrait;
@@ -88,6 +96,8 @@ public class CharacterEntity : StageEntity
 	public AudioClip SFXDying;
 	public AudioClip[] SFXComboChain;
 	public AudioClip[] SFXComboChainHit;
+	
+	public GameObject HitIndicator;
 		
 	public bool IsAirborne
 	{
@@ -100,6 +110,13 @@ public class CharacterEntity : StageEntity
 		}
 	}
 	
+	public bool IsComboLocked
+	{
+		get{
+			return this.comboDelay > 0;
+		}
+	}
+	
 	public virtual void Start()
 	{
 		this.gameManager = Camera.main.GetComponent<GameManager>();
@@ -108,6 +125,25 @@ public class CharacterEntity : StageEntity
 		
 		this.baseY = this.transform.position.y;
 		this.Health = this.StartingHealth;
+		
+		if(this.ComboDelay == null)
+		{
+			this.ComboDelay = new float[this.ComboChain.Length];
+		}
+		
+		if(this.ComboForce == null)
+		{
+			this.ComboForce = new float[this.ComboChain.Length];
+		}
+		
+		if(this.ComboAnimationSpeeds == null)
+		{
+			this.ComboAnimationSpeeds = new float[this.ComboChain.Length];
+			for(int i=0;i<this.ComboChain.Length;i++)
+			{
+				this.ComboAnimationSpeeds[i] = 1;
+			}
+		}
 	}
 	
 	public override void Update()
@@ -131,6 +167,12 @@ public class CharacterEntity : StageEntity
 			}
 			
 			this.UpdateAnimationState();
+			return;
+		}
+		
+		if(this.IsComboLocked)
+		{
+			this.comboDelay -= 0.1f;
 			return;
 		}
 				
@@ -157,10 +199,16 @@ public class CharacterEntity : StageEntity
 		
 		if(this.InCombat && !this.IsAirborne)
 		{
-			this.lastCombatTick+=0.1f;
-			if(this.lastCombatTick > this.CombatTimeout)
+			if(this.queueNextCombat)
 			{
-				this.LeaveCombat();
+				this.EnterCombat(this.queuedComboStage);
+			} else
+			{
+				this.lastCombatTick+=0.1f;
+				if(this.lastCombatTick > this.CombatTimeout)
+				{
+					this.LeaveCombat();
+				}
 			}
 		}
 		
@@ -172,23 +220,38 @@ public class CharacterEntity : StageEntity
 		this.startPos = position;
 	}
 	
-	public void OnChildCollision(Collider collider)
+	public void OnChildCollision(Collider child, Collider collider, bool indicatorOnly)
 	{
 	}
 	
-	public void OnChildCollisionStay(Collider collider)
+	public void OnChildCollisionStay(Collider child, Collider collider, bool indicatorOnly)
 	{
+		/*if(this.IsComboLocked)
+		{
+			return;
+		}*/
+		
 		var target = collider.GetComponent<Enemy>();
 		if(!this.InCombat || target == null || target.IsDead || !this.allowHit)
 		{
 			// don't care or not valid target
 			return;
-		}		
+		}
+		
+		if(this.HitIndicator != null)
+		{
+			Instantiate(this.HitIndicator, child.transform.position, Quaternion.identity);
+		}
+		
+		if(indicatorOnly)
+		{
+			return;
+		}
 		
 		if(this.SFXComboChainHit.Length > comboStage && this.SFXComboChainHit[comboStage] != null)
 		{
 			audio.PlayOneShot(this.SFXComboChainHit[comboStage]);
-		}
+		}	
 		
 		this.ResolveCombat(collider.gameObject, target);
 		this.allowHit = false;
@@ -215,10 +278,30 @@ public class CharacterEntity : StageEntity
 	
 	protected void EnterCombat(int comboStage)
 	{
+		// Check if we are in air lock mode, no combat then
+		if(this.lockAirAnimation || this.IsComboLocked)
+		{
+			return;
+		}
+		
+		if(!this.IsAirborne && this.InCombat && this.lastAnimationWasCombat && this.animation.isPlaying)
+		{
+			this.queuedComboStage = comboStage;
+			this.queueNextCombat = true;
+			return;
+		}
+		
+		this.queueNextCombat = false;
 		print ("Entering combat");
 		if(this.SFXComboChain.Length > comboStage && this.SFXComboChain[comboStage] != null)
 		{
 			audio.PlayOneShot(this.SFXComboChain[comboStage]);
+		}
+		
+		// If we are executing the same stage again force the animation
+		if(this.comboStage == comboStage)
+		{
+			this.forceComboAnimation = true;
 		}
 		
 		this.playComboAnimation = true;
@@ -260,6 +343,12 @@ public class CharacterEntity : StageEntity
 		
 	protected void MoveCharacter(float newX, float newZ)
 	{	
+		// Lock movement while in combo delay
+		if(this.IsComboLocked)
+		{
+			return;
+		}
+		
 		// Skip out of 0 movement requests
 		if(Mathf.Abs(newX) < Mathf.Epsilon && Mathf.Abs(newZ) < Mathf.Epsilon)
 		{
@@ -424,6 +513,7 @@ public class CharacterEntity : StageEntity
 			}
 			
 			this.upVelocity = 0;
+			this.lockAirAnimation = false;
 			this.transform.position = new Vector3(this.transform.position.x, this.baseY, this.transform.position.z);
 			this.MovementState = CharacterMovementState.Idle;
 			this.LeaveCombat();
@@ -485,26 +575,33 @@ public class CharacterEntity : StageEntity
 		
 		if(this.IsDead)
 		{
-			this.PlayAnimation(this.DeathAnimation, true, true);
+			this.PlayAnimation(this.DeathAnimation, true, true, this.AnimationSpeed);
 			return;
 		}
 		
 		if(this.playComboAnimation)
 		{
-			this.PlayAnimation(this.ComboChain[this.comboStage], true, false);
+			if(this.forceComboAnimation)
+			{
+				this.lastAnimationPlayed = null;
+			}
+			
+			this.PlayAnimation(this.ComboChain[this.comboStage], true, false, this.ComboAnimationSpeeds[this.comboStage]);
 			this.playComboAnimation = false;
+			this.lastAnimationWasCombat = true;
+			this.comboDelay = this.ComboDelay[this.comboStage];
 			return;
 		}
 		
 		if(this.MovementState == CharacterMovementState.Idle && !this.InCombat)
 		{			
-			this.PlayAnimation(this.IdleAnimation, false, true);
+			this.PlayAnimation(this.IdleAnimation, false, true, this.AnimationSpeed);
 			return;
 		}
 		
 		if(this.MovementState == CharacterMovementState.Walking && !this.InCombat)
 		{
-			this.PlayAnimation(this.WalkAnimation, false, true);
+			this.PlayAnimation(this.WalkAnimation, false, true, this.AnimationSpeed);
 			return;
 		}
 		
@@ -514,7 +611,7 @@ public class CharacterEntity : StageEntity
 			{
 				if(this.allowAirCombatAnim)
 				{
-					this.PlayAnimation(this.JumpCombatAnimation, true, false);
+					this.PlayAnimation(this.JumpCombatAnimation, true, false, this.AnimationSpeed);
 					this.allowAirCombatAnim = false;
 					this.lockAirAnimation = true;
 				}
@@ -522,13 +619,13 @@ public class CharacterEntity : StageEntity
 				return;
 			}
 			
-			this.PlayAnimation(this.JumpAnimation, true, true);
+			this.PlayAnimation(this.JumpAnimation, true, true, this.AnimationSpeed);
 			return;
 		}
 		
 		if(!this.lockAirAnimation && this.MovementState == CharacterMovementState.Leveling)
 		{
-			this.PlayAnimation(this.LevelingAnimation, true, true);
+			this.PlayAnimation(this.LevelingAnimation, true, true, this.AnimationSpeed);
 			return;
 		}
 		
@@ -539,7 +636,7 @@ public class CharacterEntity : StageEntity
 			{
 				if(this.allowAirCombatAnim)
 				{
-					this.PlayAnimation(this.FallCombatAnimation, true, false);
+					this.PlayAnimation(this.FallCombatAnimation, true, false, this.AnimationSpeed);
 					this.allowAirCombatAnim = false;
 					this.lockAirAnimation = true;
 				}
@@ -547,12 +644,12 @@ public class CharacterEntity : StageEntity
 				return;
 			}
 			
-			this.PlayAnimation(this.FallAnimation, true, true);
+			this.PlayAnimation(this.FallAnimation, true, true, this.AnimationSpeed);
 			return;
 		}
 	}
 	
-	private void PlayAnimation(string animation, bool onceOnly = true, bool transition = true)
+	private void PlayAnimation(string animation, bool onceOnly = true, bool transition = true, float speed = 1.0f)
 	{
 		if(this.lastAnimationPlayed == animation)
 		{
@@ -573,7 +670,7 @@ public class CharacterEntity : StageEntity
 		}		
 		
 		print("PlayAnim: "+animation);
-		this.animation[animation].speed = this.AnimationSpeed;
+		this.animation[animation].speed = speed;
 		if(!onceOnly)
 		{
 			this.animation[animation].wrapMode = WrapMode.Loop;
