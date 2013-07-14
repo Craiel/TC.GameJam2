@@ -31,6 +31,7 @@ public class GameManager : MonoBehaviour
 	public Rect StageBounds;
 	
 	public float FallDamage = 10;
+	public float ZRangeTollerance = 0.4f;
 		
 	public TextMesh MessageText = null;
 	
@@ -43,13 +44,23 @@ public class GameManager : MonoBehaviour
 	
 	public AudioClip Music;
 	
+	public GameObject Player1ModelOverride;
+	public GameObject Player2ModelOverride;
+	
 	// ---------------------------------------------
 	// Public
 	// ---------------------------------------------		
 	public void Start()
 	{
 		print ("Starting");
-		if(SceneState.Instance.Player1 != null)
+		if(this.Player1ModelOverride != null)
+		{
+			this.Player1Model = this.Player1ModelOverride;
+			this.player1 = this.Player1Model.GetComponent<Player>();
+			this.player1.OnDying += OnPlayerDying;
+			this.Player1HUD.GetComponent<PlayerHUD>().Player = this.player1.gameObject;
+		}
+		else if(SceneState.Instance.Player1 != null)
 		{
 			this.Player1Model = Instantiate(Resources.Load(SceneState.Instance.Player1), this.SpawnPositionPlayer1, Quaternion.identity) as GameObject;
 			this.player1 = this.Player1Model.GetComponent<Player>();
@@ -58,7 +69,14 @@ public class GameManager : MonoBehaviour
 			this.Player1HUD.GetComponent<PlayerHUD>().Player = this.player1.gameObject;
 		}
 		
-		if(SceneState.Instance.Player2 != null)
+		if(this.Player2ModelOverride != null)
+		{
+			this.Player1Model = this.Player1ModelOverride;
+			this.player2 = this.Player1Model.GetComponent<Player>();
+			this.player2.OnDying += OnPlayerDying;
+			this.Player2HUD.GetComponent<PlayerHUD>().Player = this.player2.gameObject;
+		}
+		else if(SceneState.Instance.Player2 != null)
 		{
 			this.Player2Model = Instantiate(Resources.Load(SceneState.Instance.Player2), this.SpawnPositionPlayer2, Quaternion.identity) as GameObject;
 			this.player2 = this.Player2Model.GetComponent<Player>();
@@ -93,27 +111,36 @@ public class GameManager : MonoBehaviour
 		this.HandleInput();
 	}
 	
-	void UpdateEnemies()
+	private void UpdateEnemies()
 	{
-		/*for(int i=0;i<ENEMY_COUNT;i++)
+		foreach(GameObject enemy in this.Enemies)
 		{
-			Enemy current = this.enemies[i];
-			if(current.IsDead)
+			Enemy controller = enemy.GetComponent<Enemy>();
+			if(controller == null)
 			{
-				m_Score += (int)current.MaxHealth;
-			}
-			
-			if(current.LifeTime <= 0 || current.IsDead)
-			{
-				this.ResetEnemy(i);
 				continue;
 			}
 			
-			if(Random.value < 0.2f)
+			if(this.player1 != null)
 			{
-				current.Fire(true, (m_Ship.transform.position - current.transform.position).normalized);
+				var distance = (this.player1.transform.position - controller.transform.position).magnitude;
+				if(distance < controller.AggroRange)
+				{
+					controller.IsActive = true;
+					continue;
+				}
 			}
-		}*/
+			
+			if(this.player2 != null)
+			{
+				var distance = (this.player2.transform.position - controller.transform.position).magnitude;
+				if(distance < controller.AggroRange)
+				{
+					controller.IsActive = true;
+					continue;
+				}
+			}
+		}
 	}	
 		
 	void HandleInput()
@@ -207,5 +234,29 @@ public class GameManager : MonoBehaviour
 				this.MessageText.renderer.material.color.b, 
 				1.0f - (Time.time - this.textAnimationStartTime)/this.textAnimationTime);
 		}
+	}
+	
+	public GameObject FindClosestPlayer(Vector3 position)
+	{
+		GameObject result = this.player1.gameObject;
+		if(result != null)
+		{
+			if(this.player2 == null)
+			{
+				return result;
+			}
+			
+			float a = (result.transform.position - position).magnitude;
+			float b = (this.player2.transform.position - position).magnitude;
+			if(b > a)
+			{
+				return this.player2.gameObject;
+			}
+		} else
+		{
+			return this.player2.gameObject;
+		}
+		
+		return result;
 	}
 }

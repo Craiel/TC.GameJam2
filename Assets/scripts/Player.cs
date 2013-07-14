@@ -161,6 +161,7 @@ public class Player : CharacterEntity
 		base.LeaveCombat();
 		
 		this.comboDidHit = false;
+		this.currentChain = 0;
 		this.CurrentTarget = null;
 	}
 	

@@ -7,6 +7,8 @@ public class ChildCollider : MonoBehaviour
 	
 	public GameObject Parent;
 	
+	public bool IndicatorOnly = false;
+	
 	public void Start()
 	{
 		this.host = this.Parent.GetComponent<CharacterEntity>();
@@ -20,7 +22,7 @@ public class ChildCollider : MonoBehaviour
 		}
 		
 		print ("ChildTrigger -> going to parent");
-		this.host.OnChildCollision(collider);
+		this.host.OnChildCollision(this.collider, collider, this.IndicatorOnly);
 	}
 	
 	public void OnTriggerStay(Collider collider)
@@ -30,6 +32,6 @@ public class ChildCollider : MonoBehaviour
 			return;
 		}
 		
-		this.host.OnChildCollisionStay(collider);
+		this.host.OnChildCollisionStay(this.collider, collider, this.IndicatorOnly);
 	}
 }
