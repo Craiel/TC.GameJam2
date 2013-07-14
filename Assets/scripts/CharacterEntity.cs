@@ -8,7 +8,8 @@ public enum CharacterMovementState
 	Walking,
 	Jumping,
 	Leveling,
-	Falling
+	Falling,
+	Landing
 }
 
 public class CharacterEntity : StageEntity 
@@ -18,7 +19,6 @@ public class CharacterEntity : StageEntity
 	
 	private Vector3? startPos;
 			
-	private int levelingTimer;
 	private int moveTimeoutTimer;
 	
 	private Vector3 lastGroundedPosition;
@@ -45,6 +45,17 @@ public class CharacterEntity : StageEntity
 		
 	public CharacterMovementState MovementState { get; set; }
 	
+	public bool IsAirborne
+	{
+		get
+		{
+			return this.MovementState == CharacterMovementState.Jumping || 
+				this.MovementState == CharacterMovementState.Falling || 
+					this.MovementState == CharacterMovementState.Landing || 
+					this.MovementState == CharacterMovementState.Leveling;
+		}
+	}
+	
 	public virtual void Start()
 	{
 		this.gameManager = Camera.main.GetComponent<GameManager>();
@@ -63,7 +74,7 @@ public class CharacterEntity : StageEntity
 			this.startPos = null;
 		}
 				
-		if(this.MovementState == CharacterMovementState.Jumping || this.MovementState == CharacterMovementState.Falling || this.MovementState == CharacterMovementState.Leveling)
+		if(this.IsAirborne)
 		{
 			this.UpdateAirState();
 		}
@@ -84,7 +95,7 @@ public class CharacterEntity : StageEntity
 	protected void StartJump()
 	{
 		// No jumping if we already are or have no rigid body\\ t
-		if(this.MovementState == CharacterMovementState.Jumping || this.MovementState == CharacterMovementState.Falling || this.MovementState == CharacterMovementState.Leveling)
+		if(this.IsAirborne)
 		{
 			return;
 		}
@@ -93,15 +104,14 @@ public class CharacterEntity : StageEntity
 		this.lastGroundedPosition = this.transform.position;
 		this.upVelocity = this.JumpStrength;
 		this.MovementState = CharacterMovementState.Jumping;
-		this.levelingTimer = 0;
 	}
-	
+		
 	protected void MoveCharacter(float newX, float newZ)
 	{		
 		if(this.CanMoveInAir || this.MovementState == CharacterMovementState.Idle || this.MovementState == CharacterMovementState.Walking)
 		{
 			// Clear out depth movement if we are airborne
-			if(this.MovementState == CharacterMovementState.Falling || this.MovementState == CharacterMovementState.Jumping || this.MovementState == CharacterMovementState.Leveling)
+			if(this.IsAirborne)
 			{
 				newZ = 0;
 			}
@@ -171,26 +181,60 @@ public class CharacterEntity : StageEntity
 	// Protected
 	// ---------------------------------------------	
 	private void UpdateAirState()
-	{
-		transform.Translate(new Vector3(this.moveDirection.x * AirSpeed, 0, this.moveDirection.y * AirSpeed), null);
+	{			
+		this.upVelocity -= this.Gravity;
+		if(this.upVelocity < this.TerminalVelocity)
+		{
+			this.upVelocity = this.TerminalVelocity;
+		}
+		print (this.MovementState+" - "+this.upVelocity+" -> "+this.moveDirection);
+		print (this.moveDirection.x * AirSpeed+", "+ this.upVelocity+", "+ this.moveDirection.y * AirSpeed);
+		this.transform.Translate(Mathf.Abs(this.moveDirection.x * AirSpeed), this.upVelocity, 0);
+		
+		// Stop air movement if we are hitting the boundaries
+		if(this.transform.position.x < this.gameManager.StageBounds.x)
+		{
+			this.moveDirection = new Vector2(0, 0);
+			this.transform.position = new Vector3(this.gameManager.StageBounds.x, this.transform.position.y, this.transform.position.z);
+		}
+		else if(this.transform.position.x > this.gameManager.StageBounds.width)
+		{
+			this.moveDirection = new Vector2(0, 0);
+			this.transform.position = new Vector3(this.gameManager.StageBounds.width, this.transform.position.y, this.transform.position.z);
+		}
+		
+		if(this.upVelocity < 0.1f && this.MovementState == CharacterMovementState.Jumping)
+		{
+			print ("Leveling");
+			this.MovementState = CharacterMovementState.Leveling;
+			return;
+		}
+		
+		if(this.upVelocity < -0.01f && this.MovementState == CharacterMovementState.Leveling)
+		{
+			print ("Landing");
+			this.MovementState = CharacterMovementState.Landing;
+			return;
+		}
+		
+		if(this.transform.position.y < this.baseY && this.MovementState == CharacterMovementState.Landing)
+		{
+			print ("Landed");
+			this.upVelocity = 0;
+			this.transform.position = new Vector3(this.transform.position.x, this.baseY, this.transform.position.z);
+			this.MovementState = CharacterMovementState.Idle;
+			return;
+		}
 		
 		if(this.transform.position.y < DeathDepth)
 		{
+			print ("Death from falling");
 			this.ForceDeath();
 			this.upVelocity = 0;
 			this.transform.position = new Vector3(this.lastGroundedPosition.x, this.baseY, this.lastGroundedPosition.z);
 			this.MovementState = CharacterMovementState.Idle;
 			return;
 		}
-		
-		this.upVelocity -= this.Gravity;
-		if(this.upVelocity < this.TerminalVelocity)
-		{
-			this.upVelocity = this.TerminalVelocity;
-		}
-		
-		this.transform.Translate(0, this.upVelocity, 0);
-		// Todo: Check the state of air and move us into level or idle
 	}
 	
 	private float CheckXMovementBounds(float origin, float translation)
