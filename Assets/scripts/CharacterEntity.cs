@@ -34,12 +34,15 @@ public class CharacterEntity : StageEntity
 	private float idleDelay = 0;
 	private float lastCombatTick = 0;
 	private int comboStage = 0;
+	private bool allowHit = false;
 	
 	private string lastAnimationPlayed;
 			
 	// ---------------------------------------------
 	// Public
 	// ---------------------------------------------
+	public int StartingHealth = 100;
+	
 	public float Speed = 1.0f;
 	public float AirSpeed = 1.0f;
 	
@@ -69,8 +72,8 @@ public class CharacterEntity : StageEntity
 	public string[] ComboChain = null;
 	public float CombatTimeout = 2;
 	
-	public GameObject RootBone;	
-	
+	public Texture2D Portrait;
+		
 	public bool IsAirborne
 	{
 		get
@@ -89,18 +92,13 @@ public class CharacterEntity : StageEntity
 		this.animation = this.GetComponent<Animation>();
 		
 		this.baseY = this.transform.position.y;
+		this.Health = this.StartingHealth;
 	}
 	
 	public override void Update()
 	{
 		base.Update();
-		
-		if(this.RootBone != null)
-		{
-			//print (this.RootBone.transform.position);
-			//this.movementCollider.transform.position = new Vector3(this.RootBone.transform.position.x, this.baseY, this.RootBone.transform.position.z);
-		}
-		
+				
 		//print ("Falling");
 		if(this.startPos != null)
 		{
@@ -138,7 +136,24 @@ public class CharacterEntity : StageEntity
 	{
 		this.startPos = position;
 	}
+	
+	public void OnChildCollision(Collider collider)
+	{
+	}
+	
+	public void OnChildCollisionStay(Collider collider)
+	{
+		var target = collider.GetComponent<Enemy>();
+		if(!this.InCombat || target == null || !this.allowHit)
+		{
+			// don't care or not valid target
+			return;
+		}		
 		
+		this.ResolveCombat(collider.gameObject, target);
+		this.allowHit = false;
+	}
+	
 	// ---------------------------------------------
 	// Protected
 	// ---------------------------------------------	
@@ -152,19 +167,27 @@ public class CharacterEntity : StageEntity
 	
 	protected bool InCombat { get; private set; }
 	
-	protected void SetCombat(int comboStage)
+	protected virtual void ResolveCombat(GameObject target, Enemy targetData)
+	{
+		// Todo: Damage based on combo
+		targetData.TakeDamage(10);
+	}
+	
+	protected void EnterCombat(int comboStage)
 	{
 		print ("Entering combat");
 		this.InCombat = true;
 		this.lastCombatTick = 0;		
 		this.comboStage = comboStage;
+		this.allowHit = true;
 	}
 	
-	protected void LeaveCombat()
+	protected virtual void LeaveCombat()
 	{
 		print("Leaving Combat");
 		this.InCombat = false;
 		this.comboStage = 0;
+		this.allowHit = false;
 	}
 	
 	protected void StartJump()

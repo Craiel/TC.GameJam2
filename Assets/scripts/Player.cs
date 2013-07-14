@@ -16,14 +16,12 @@ public class Player : CharacterEntity
 	// ---------------------------------------------
 	// Public
 	// ---------------------------------------------
-	public int StartingHealth = 100;
-	
 	public string ControlPrefix = "Player1";
 	
 	public bool CameraFollows = false;
 	public bool CameraFollowsY = false;	
 	
-	public Texture2D Portrait;
+	public GameObject CurrentTarget { get; set; }
 	
 	public int Score
 	{
@@ -63,7 +61,6 @@ public class Player : CharacterEntity
 		base.Start();
 		
 		this.mainCamera = Camera.main;
-		this.Health = this.StartingHealth;
 	}
 	
 	public override void Update()
@@ -79,7 +76,7 @@ public class Player : CharacterEntity
 
 		if(attackAction)
 		{
-			this.SetCombat(0);
+			this.EnterCombat(0);
 		}
 						
 		/*Animation anim = this.GetComponent<Animation>();
@@ -133,10 +130,28 @@ public class Player : CharacterEntity
 		}
 	}
 	
+	protected override void ResolveCombat(GameObject target, Enemy targetData)
+	{
+		base.ResolveCombat(target, targetData);
+		
+		this.CurrentTarget = target;
+		
+		if(targetData.IsDead)
+		{
+			this.score += targetData.ScoreReward;
+		}
+	}
+	
+	protected override void LeaveCombat ()
+	{
+		this.CurrentTarget = null;
+	}
+	
 	private bool ableToAttack() {
 		return this.MovementState == CharacterMovementState.Idle
 			|| this.MovementState == CharacterMovementState.Walking;
 	}
+	
 	
 	/*private bool startingNewAttack() {
 		return currentComboProgress == -1;
@@ -154,9 +169,4 @@ public class Player : CharacterEntity
 		return currentComboProgress == comboChain.Length;
 	}*/
 
-	private void UpdateVisuals()
-	{
-		// Todo:
-		// 
-	}
 }
