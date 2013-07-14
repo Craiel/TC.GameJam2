@@ -10,7 +10,7 @@ public class HitIndicatorScript : MonoBehaviour {
 	void Start () {
 		int i;
 			
-		for(i=0;i<15;i++)
+		for(i=0;i<7;i++)
 		{
 			float randX = transform.position.x-0.01f+Random.Range (0,0.02f);
 			float randY = transform.position.y-0.01f+Random.Range (0,0.02f);
