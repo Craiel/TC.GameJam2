@@ -17,6 +17,9 @@ public class Player : CharacterEntity
 	
 	public bool CameraFollows = false;
 	public bool CameraFollowsY = false;
+
+	private int currentComboProgress = -1;
+	public string[] comboChain = new string[]{ "Punch", "Second_punch", "Elbow", "Knee", "Breaker" };
 	
 	public int Score
 	{
@@ -67,10 +70,50 @@ public class Player : CharacterEntity
 		float newZ = Input.GetAxis(ControlPrefix+" Vertical");
 		//float newY = this.CurrentYPos;
 		
-		float attackState = Input.GetAxis(ControlPrefix+" Attack");
-		float jumpState = Input.GetAxis(ControlPrefix+" Jump");
+		bool attackAction = Input.GetButtonDown(ControlPrefix + " Attack");
+		bool jumpAction = Input.GetButtonDown(ControlPrefix + " Jump");
+
 		
-		this.CheckAction(attackState > 0, jumpState > 0);
+		Animation anim = this.GetComponent<Animation>();
+
+		// Update anims
+		if(this.MovementState == CharacterMovementState.Idle && !anim.isPlaying) 
+		{
+			anim.PlayQueued("Idling");
+			print ("Idling");
+		}
+				
+		if(attackAction) 
+		{
+			if(startingNewAttack()) {
+				currentComboProgress = 0;
+				anim.CrossFade(comboChain[currentComboProgress],0.1f);
+				print ("Starting:" + currentComboProgress);
+			} else if(attackInProgress()) {
+				currentComboProgress++;
+				anim.CrossFade(comboChain[currentComboProgress],0.1f);
+				print ("Progress:" + currentComboProgress+"/"+comboChain.Length);
+			} else if(lastStrike()) {
+				print ("Last strike:" + currentComboProgress);
+				currentComboProgress++;
+				anim.CrossFade(comboChain[currentComboProgress],0.1f);				
+			}
+		}
+		
+		if(comboCompleted()) {
+			print ("Combo completed");
+			currentComboProgress = -1;
+			anim.CrossFadeQueued("Idling",0.5f);
+		}
+			
+		
+		// Jump?
+		if(jumpAction)
+		{
+			this.StartJump();
+		}
+		
+		// Update movement and cam
 		this.MoveCharacter(newX, newZ);
 				
 		if(this.CameraFollows)
@@ -83,14 +126,27 @@ public class Player : CharacterEntity
 		}
 	}
 	
-	private void CheckAction(bool attack, bool jump)
-	{
-		if(jump)
-		{
-			this.StartJump();
-		}
+	private bool ableToAttack() {
+		return this.MovementState == CharacterMovementState.Idle
+			|| this.MovementState == CharacterMovementState.Walking;
 	}
 	
+	private bool startingNewAttack() {
+		return currentComboProgress == -1;
+	}
+	
+	private bool attackInProgress() {
+		return currentComboProgress > -1 && currentComboProgress < comboChain.Length - 2;
+	}
+	
+	private bool lastStrike() {
+		return currentComboProgress == comboChain.Length - 1;
+	}
+	
+	private bool comboCompleted() {
+		return currentComboProgress == comboChain.Length;
+	}
+
 	private void UpdateVisuals()
 	{
 		// Todo:

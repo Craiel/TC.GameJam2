@@ -6,7 +6,6 @@ public enum CharacterMovementState
 	Idle,
 	Punching,
 	Walking,
-	Running,
 	Jumping,
 	Leveling,
 	Falling
@@ -15,11 +14,10 @@ public enum CharacterMovementState
 public class CharacterEntity : StageEntity 
 {		
 	private GameManager gameManager;
+	private CapsuleCollider movementCollider;
 	
 	private Vector3? startPos;
 			
-	private CharacterMovementState movementState;
-	
 	private int levelingTimer;
 	private int moveTimeoutTimer;
 	
@@ -27,25 +25,34 @@ public class CharacterEntity : StageEntity
 	private Vector2 moveDirection;
 	
 	private bool rotate;
+	
+	private float upVelocity;
+	private float baseY;
 			
 	// ---------------------------------------------
 	// Public
 	// ---------------------------------------------
 	public float Speed = 1.0f;
 	public float AirSpeed = 1.0f;
-	public float RunSpeed = 2.0f;
 	
 	public float JumpStrength = 3.0f;
+	public float JumpFalloff = 1.0f;
+	public float TerminalVelocity = -0.5f;
+	
+	public float DragBoundary = 0.5f;
 	
 	public float DeathDepth = -3;
 	
 	public bool CanMoveInAir = false;
-	
-	public bool IsRunning { get; set; }
+		
+	public CharacterMovementState MovementState { get; set; }
 	
 	public virtual void Start()
 	{
 		this.gameManager = Camera.main.GetComponent<GameManager>();
+		this.movementCollider = this.GetComponent<CapsuleCollider>();
+		
+		this.baseY = this.transform.position.y;
 	}
 	
 	public override void Update()
@@ -57,20 +64,15 @@ public class CharacterEntity : StageEntity
 			this.transform.position = (Vector3)this.startPos;
 			this.startPos = null;
 		}
-		
-		if (this.movementState == CharacterMovementState.Running || this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Walking || this.movementState == CharacterMovementState.Punching)
-		{
-			this.lastGroundedPosition = this.transform.position;
-		}
-		
-		if(this.movementState == CharacterMovementState.Jumping || this.movementState == CharacterMovementState.Falling || this.movementState == CharacterMovementState.Leveling)
+				
+		if(this.MovementState == CharacterMovementState.Jumping || this.MovementState == CharacterMovementState.Falling || this.MovementState == CharacterMovementState.Leveling)
 		{
 			this.UpdateAirState();
 		}
-		else if (this.movementState != CharacterMovementState.Falling)
+		else if (this.MovementState != CharacterMovementState.Falling)
 		{
 			// Todo: Check if we are starting to fall here
-		}	
+		}
 	}
 	
 	public void Initialize(Vector3 position)
@@ -88,52 +90,74 @@ public class CharacterEntity : StageEntity
 	protected void StartJump()
 	{
 		// No jumping if we already are or have no rigid body\\ t
-		if(this.movementState == CharacterMovementState.Jumping || this.movementState == CharacterMovementState.Falling || this.movementState == CharacterMovementState.Leveling)
+		if(this.MovementState == CharacterMovementState.Jumping || this.MovementState == CharacterMovementState.Falling || this.MovementState == CharacterMovementState.Leveling)
 		{
 			return;
 		}
 		
 		//print ("Jumping");
 		this.lastGroundedPosition = this.transform.position;
-		// Todo: Add actual jump movement
-		this.movementState = CharacterMovementState.Jumping;
+		this.upVelocity = this.JumpStrength;
+		this.MovementState = CharacterMovementState.Jumping;
 		this.levelingTimer = 0;
 	}
 	
 	protected void MoveCharacter(float newX, float newZ)
 	{		
-		if(this.CanMoveInAir || this.movementState == CharacterMovementState.Running || this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Walking)
+		if(this.CanMoveInAir || this.MovementState == CharacterMovementState.Idle || this.MovementState == CharacterMovementState.Walking)
 		{
 			// Clear out depth movement if we are airborne
-			if(this.movementState == CharacterMovementState.Falling || this.movementState == CharacterMovementState.Jumping || this.movementState == CharacterMovementState.Leveling)
+			if(this.MovementState == CharacterMovementState.Falling || this.MovementState == CharacterMovementState.Jumping || this.MovementState == CharacterMovementState.Leveling)
 			{
 				newZ = 0;
 			}
 						
 			Vector3 newVector;
-			if(this.IsRunning)
+			
+			//print ("Walking");
+			if(this.MovementState == CharacterMovementState.Idle)
 			{
-				//print ("Running");
-				if(this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Walking)
-				{
-					this.movementState = CharacterMovementState.Running;
-				}
-				
-				newVector = new Vector3(this.CheckXMovementBounds(this.transform.position.x, newX * this.RunSpeed), 
-					0, 
-					this.CheckZMovementBounds(this.transform.position.z, newZ * this.RunSpeed));
+				this.MovementState = CharacterMovementState.Walking;
 			}
-			else
+			
+			newVector = new Vector3(this.CheckXMovementBounds(this.transform.position.x, newX * this.Speed), 
+				0, 
+				this.CheckZMovementBounds(this.transform.position.z, newZ * this.Speed));
+			
+			// Test the new vector against colliding geometry
+			Vector3 target = this.movementCollider.transform.position + this.movementCollider.center + new Vector3(newX, 0, newZ);
+			foreach(var geometry in this.gameManager.CollidingGeometry)
 			{
-				//print ("Walking");
-				if(this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Running)
+				CapsuleCollider test = geometry.collider as CapsuleCollider;
+				if(test == null)
 				{
-					this.movementState = CharacterMovementState.Walking;
+					continue;
 				}
 				
-				newVector = new Vector3(this.CheckXMovementBounds(this.transform.position.x, newX * this.Speed), 
-					0, 
-					this.CheckZMovementBounds(this.transform.position.z, newZ * this.Speed));
+				float distance = (target - (test.transform.position + test.center)).magnitude;
+				float requiredDistance = (this.movementCollider.radius * this.movementCollider.transform.localScale.x) + (test.radius * test.transform.localScale.x);
+				if(distance < requiredDistance)
+				{
+					// We are too close to a collider, bail out
+					return;
+				}
+			}
+			
+			bool wasDragged = false;
+			foreach(var drag in this.gameManager.DragEntries)
+			{
+				BoxCollider test = drag.collider as BoxCollider;				
+				if(test.bounds.Contains(target))
+				{
+					this.upVelocity = -drag.GetComponent<DragObject>().Pull;
+					this.MovementState = CharacterMovementState.Falling;
+					wasDragged = true;
+				}
+			}
+			
+			if(!wasDragged && (this.MovementState == CharacterMovementState.Walking || this.MovementState == CharacterMovementState.Idle))
+			{
+				this.lastGroundedPosition = this.transform.position;
 			}
 			
 			transform.Translate(newVector, null);
@@ -148,12 +172,6 @@ public class CharacterEntity : StageEntity
 		}
 	}
 	
-	protected override void HandleCollision(Collider collider)
-	{
-	}
-	
-	
-	
 	// ---------------------------------------------
 	// Protected
 	// ---------------------------------------------	
@@ -164,10 +182,19 @@ public class CharacterEntity : StageEntity
 		if(this.transform.position.y < DeathDepth)
 		{
 			this.ForceDeath();
-			this.transform.position = this.lastGroundedPosition;
+			this.upVelocity = 0;
+			this.transform.position = new Vector3(this.lastGroundedPosition.x, this.baseY, this.lastGroundedPosition.z);
+			this.MovementState = CharacterMovementState.Idle;
 			return;
 		}
 		
+		this.upVelocity -= this.JumpFalloff;
+		if(this.upVelocity < this.TerminalVelocity)
+		{
+			this.upVelocity = this.TerminalVelocity;
+		}
+		
+		this.transform.Translate(0, this.upVelocity, 0);
 		// Todo: Check the state of air and move us into level or idle
 	}
 	
@@ -190,7 +217,7 @@ public class CharacterEntity : StageEntity
 	
 	private float CheckZMovementBounds(float origin, float translation)
 	{
-		print (origin+translation+" "+translation+ " -- "+this.gameManager.StageBounds);
+//		print (origin+translation+" "+translation+ " -- "+this.gameManager.StageBounds);
 		if((origin + translation) < this.gameManager.StageBounds.y && translation < 0)
 		{
 			this.transform.position = this.transform.position + new Vector3(0, 0, Mathf.Abs(translation));

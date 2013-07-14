@@ -34,6 +34,9 @@ public class GameManager : MonoBehaviour
 		
 	public TextMesh MessageText = null;
 	
+	public List<GameObject> CollidingGeometry;
+	public List<GameObject> DragEntries;
+	
 	// ---------------------------------------------
 	// Public
 	// ---------------------------------------------		
