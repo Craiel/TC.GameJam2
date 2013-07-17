@@ -4,73 +4,215 @@ using System.Collections;
 public enum CharacterMovementState
 {
 	Idle,
-	Punching,
 	Walking,
-	Running,
 	Jumping,
 	Leveling,
-	Falling
+	Falling,
+	Landing
 }
 
 public class CharacterEntity : StageEntity 
 {		
 	private GameManager gameManager;
+	private CapsuleCollider movementCollider;
+	private Animation animation;
 	
 	private Vector3? startPos;
 			
-	private CharacterMovementState movementState;
-	
-	private int levelingTimer;
 	private int moveTimeoutTimer;
 	
 	private Vector3 lastGroundedPosition;
 	private Vector2 moveDirection;
 	
 	private bool rotate;
+	
+	private float upVelocity;
+	private float baseY;
+	private float comboDelay;
+	
+	private int currentComboProgress = -1;
+	private float idleDelay = 0;
+	private float lastCombatTick = 0;
+	private float deathTick = 0;
+	private int comboStage = 0;
+	private bool allowHit = false;
+	private bool allowAirCombatAnim = false;
+	private bool lockAirAnimation = false;
+	private bool playComboAnimation = false;
+	private bool forceComboAnimation = false;
+	
+	private string lastAnimationPlayed;
+	private bool lastAnimationWasCombat;
+	private bool queueNextCombat = false;
+	private int queuedComboStage = 0;
 			
 	// ---------------------------------------------
 	// Public
 	// ---------------------------------------------
+	public int StartingHealth = 100;
+	
 	public float Speed = 1.0f;
 	public float AirSpeed = 1.0f;
-	public float RunSpeed = 2.0f;
 	
 	public float JumpStrength = 3.0f;
+	public float Gravity = 1.0f;
+	public float TerminalVelocity = -0.5f;
 	
+	public float AnimationSpeed = 1.0f;
+	public float[] ComboAnimationSpeeds;
+	public float AnimationFadeTime = 0.4f;
+	
+	public float IdleTime = 0.5f;
+		
 	public float DeathDepth = -3;
 	
 	public bool CanMoveInAir = false;
+		
+	public CharacterMovementState MovementState { get; set; }
 	
-	public bool IsRunning { get; set; }
+	public string IdleAnimation = "Idling";
+	public string WalkAnimation = "Walking";
+	public string JumpAnimation = "Jumping";
+	public string FallAnimation = "Falling";
+	public string DeathAnimation = "Death";
+	public string LevelingAnimation = "Leveling";
+	public string FallCombatAnimation = "FallingCombat";
+	public string JumpCombatAnimation = "JumpCombat";
+	
+	public string Name = "No Name";
+	
+	public string[] ComboChain = null;
+	public float[] ComboDelay;
+	public float[] ComboForce;
+	public float CombatTimeout = 2;
+	public float HitReach = 1.0f;
+	public float DeathTimer = 3;
+	
+	public Texture2D Portrait;
+	
+	public AudioClip SFXJump;
+	public AudioClip SFXLand;
+	public AudioClip SFXFalling;
+	public AudioClip SFXDying;
+	public AudioClip[] SFXComboChain;
+	public AudioClip[] SFXComboChainHit;
+	
+	public GameObject HitIndicator;
+		
+	public bool IsAirborne
+	{
+		get
+		{
+			return this.MovementState == CharacterMovementState.Jumping || 
+				this.MovementState == CharacterMovementState.Falling || 
+					this.MovementState == CharacterMovementState.Landing || 
+					this.MovementState == CharacterMovementState.Leveling;
+		}
+	}
+	
+	public bool IsComboLocked
+	{
+		get{
+			return this.comboDelay > 0;
+		}
+	}
 	
 	public virtual void Start()
 	{
 		this.gameManager = Camera.main.GetComponent<GameManager>();
+		this.movementCollider = this.GetComponent<CapsuleCollider>();
+		this.animation = this.GetComponent<Animation>();
+		
+		this.baseY = this.transform.position.y;
+		this.Health = this.StartingHealth;
+		
+		if(this.ComboDelay == null)
+		{
+			this.ComboDelay = new float[this.ComboChain.Length];
+		}
+		
+		if(this.ComboForce == null)
+		{
+			this.ComboForce = new float[this.ComboChain.Length];
+		}
+		
+		if(this.ComboAnimationSpeeds == null)
+		{
+			this.ComboAnimationSpeeds = new float[this.ComboChain.Length];
+			for(int i=0;i<this.ComboChain.Length;i++)
+			{
+				this.ComboAnimationSpeeds[i] = 1;
+			}
+		}
 	}
 	
 	public override void Update()
 	{
 		base.Update();
+		
+		/*if(this.animation != null)
+		{
+			string bla = this.lastAnimationPlayed;
+			if(bla == null) bla = "";
+			print (this.animation.isPlaying+", "+bla +", ");
+		}*/
+		
+		// when dead we only do the basics
+		if(this.IsDead)
+		{
+			this.deathTick += 0.1f;
+			if(this.deathTick > this.DeathTimer)
+			{
+				Destroy(this.gameObject);
+			}
+			
+			this.UpdateAnimationState();
+			return;
+		}
+		
+		if(this.IsComboLocked)
+		{
+			this.comboDelay -= 0.1f;
+			return;
+		}
+				
 		//print ("Falling");
 		if(this.startPos != null)
 		{
 			this.transform.position = (Vector3)this.startPos;
 			this.startPos = null;
 		}
-		
-		if (this.movementState == CharacterMovementState.Running || this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Walking || this.movementState == CharacterMovementState.Punching)
-		{
-			this.lastGroundedPosition = this.transform.position;
-		}
-		
-		if(this.movementState == CharacterMovementState.Jumping || this.movementState == CharacterMovementState.Falling || this.movementState == CharacterMovementState.Leveling)
+				
+		if(this.IsAirborne)
 		{
 			this.UpdateAirState();
 		}
-		else if (this.movementState != CharacterMovementState.Falling)
+		else if(this.MovementState != CharacterMovementState.Idle)
 		{
-			// Todo: Check if we are starting to fall here
-		}	
+			this.idleDelay+=0.1f;
+			if(this.idleDelay > this.IdleTime)
+			{
+				this.MovementState = CharacterMovementState.Idle;
+				this.idleDelay = 0;
+			}
+		}
+		
+		if(this.InCombat && !this.IsAirborne)
+		{
+			if(this.queueNextCombat)
+			{
+				this.EnterCombat(this.queuedComboStage);
+			} else
+			{
+				this.lastCombatTick+=0.1f;
+				if(this.lastCombatTick > this.CombatTimeout)
+				{
+					this.LeaveCombat();
+				}
+			}
+		}
+		
+		this.UpdateAnimationState();
 	}
 	
 	public void Initialize(Vector3 position)
@@ -78,62 +220,193 @@ public class CharacterEntity : StageEntity
 		this.startPos = position;
 	}
 	
-	public virtual void ForceDeath()
+	public void OnChildCollision(Collider child, Collider collider, bool indicatorOnly)
 	{
+	}
+	
+	public void OnChildCollisionStay(Collider child, Collider collider, bool indicatorOnly)
+	{
+		/*if(this.IsComboLocked)
+		{
+			return;
+		}*/
+		
+		var target = collider.GetComponent<Enemy>();
+		if(!this.InCombat || target == null || target.IsDead || !this.allowHit)
+		{
+			// don't care or not valid target
+			return;
+		}
+		
+		if(this.HitIndicator != null)
+		{
+			Instantiate(this.HitIndicator, child.transform.position, Quaternion.identity);
+		}
+		
+		if(indicatorOnly)
+		{
+			return;
+		}
+		
+		if(this.SFXComboChainHit.Length > comboStage && this.SFXComboChainHit[comboStage] != null)
+		{
+			audio.PlayOneShot(this.SFXComboChainHit[comboStage]);
+		}	
+		
+		this.ResolveCombat(collider.gameObject, target);
+		this.allowHit = false;
 	}
 	
 	// ---------------------------------------------
 	// Protected
 	// ---------------------------------------------	
+	protected GameManager GameManager
+	{
+		get
+		{
+			return this.gameManager;
+		}
+	}
+	
+	protected bool InCombat { get; private set; }
+	
+	protected virtual void ResolveCombat(GameObject target, Enemy targetData)
+	{
+		// Todo: Damage based on combo
+		targetData.TakeDamage(10);
+	}
+	
+	protected void EnterCombat(int comboStage)
+	{
+		// Check if we are in air lock mode, no combat then
+		if(this.lockAirAnimation || this.IsComboLocked)
+		{
+			return;
+		}
+		
+		if(!this.IsAirborne && this.InCombat && this.lastAnimationWasCombat && this.animation.isPlaying)
+		{
+			this.queuedComboStage = comboStage;
+			this.queueNextCombat = true;
+			return;
+		}
+		
+		this.queueNextCombat = false;
+		print ("Entering combat");
+		if(this.SFXComboChain.Length > comboStage && this.SFXComboChain[comboStage] != null)
+		{
+			audio.PlayOneShot(this.SFXComboChain[comboStage]);
+		}
+		
+		// If we are executing the same stage again force the animation
+		if(this.comboStage == comboStage)
+		{
+			this.forceComboAnimation = true;
+		}
+		
+		this.playComboAnimation = true;
+		this.allowAirCombatAnim = true;
+		this.InCombat = true;
+		this.lastCombatTick = 0;		
+		this.comboStage = comboStage;
+		this.allowHit = true;
+	}
+	
+	protected virtual void LeaveCombat()
+	{
+		print("Leaving Combat");
+		this.InCombat = false;
+		this.comboStage = 0;
+		this.allowHit = false;
+		this.allowAirCombatAnim = false;
+	}
+	
 	protected void StartJump()
 	{
 		// No jumping if we already are or have no rigid body\\ t
-		if(this.movementState == CharacterMovementState.Jumping || this.movementState == CharacterMovementState.Falling || this.movementState == CharacterMovementState.Leveling)
+		if(this.IsAirborne)
 		{
 			return;
 		}
 		
 		//print ("Jumping");
-		this.lastGroundedPosition = this.transform.position;
-		// Todo: Add actual jump movement
-		this.movementState = CharacterMovementState.Jumping;
-		this.levelingTimer = 0;
-	}
-	
-	protected void MoveCharacter(float newX, float newZ)
-	{		
-		if(this.CanMoveInAir || this.movementState == CharacterMovementState.Running || this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Walking)
+		if(this.SFXJump != null)
 		{
+			audio.PlayOneShot(this.SFXJump);
+		}
+		
+		this.lockAirAnimation = false;
+		this.lastGroundedPosition = this.transform.position;
+		this.upVelocity = this.JumpStrength;
+		this.MovementState = CharacterMovementState.Jumping;
+	}
+		
+	protected void MoveCharacter(float newX, float newZ)
+	{	
+		// Lock movement while in combo delay
+		if(this.IsComboLocked)
+		{
+			return;
+		}
+		
+		// Skip out of 0 movement requests
+		if(Mathf.Abs(newX) < Mathf.Epsilon && Mathf.Abs(newZ) < Mathf.Epsilon)
+		{
+			this.moveDirection = new Vector2(0, 0);
+			return;
+		}
+		
+		if(this.CanMoveInAir || this.MovementState == CharacterMovementState.Idle || this.MovementState == CharacterMovementState.Walking)
+		{
+			this.idleDelay = 0;
+			if(this.MovementState == CharacterMovementState.Idle)
+			{				
+				this.MovementState = CharacterMovementState.Walking;
+			}
+			
 			// Clear out depth movement if we are airborne
-			if(this.movementState == CharacterMovementState.Falling || this.movementState == CharacterMovementState.Jumping || this.movementState == CharacterMovementState.Leveling)
+			if(this.IsAirborne)
 			{
 				newZ = 0;
 			}
 						
 			Vector3 newVector;
-			if(this.IsRunning)
+			
+			//print ("Walking");
+			if(this.MovementState == CharacterMovementState.Idle)
 			{
-				//print ("Running");
-				if(this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Walking)
-				{
-					this.movementState = CharacterMovementState.Running;
-				}
-				
-				newVector = new Vector3(this.CheckXMovementBounds(this.transform.position.x, newX * this.RunSpeed), 
-					0, 
-					this.CheckZMovementBounds(this.transform.position.z, newZ * this.RunSpeed));
+				this.MovementState = CharacterMovementState.Walking;
 			}
-			else
+			
+			newVector = new Vector3(this.CheckXMovementBounds(this.transform.position.x, newX * this.Speed), 
+				0, 
+				this.CheckZMovementBounds(this.transform.position.z, newZ * this.Speed));
+			
+			// Test the new vector against colliding geometry
+			Vector3 target = this.movementCollider.transform.position + this.movementCollider.center + new Vector3(newX, 0, newZ);
+			foreach(var geometry in this.gameManager.CollidingGeometry)
 			{
-				//print ("Walking");
-				if(this.movementState == CharacterMovementState.Idle || this.movementState == CharacterMovementState.Running)
+				CapsuleCollider test = geometry.collider as CapsuleCollider;
+				if(test == null)
 				{
-					this.movementState = CharacterMovementState.Walking;
+					continue;
 				}
 				
-				newVector = new Vector3(this.CheckXMovementBounds(this.transform.position.x, newX * this.Speed), 
-					0, 
-					this.CheckZMovementBounds(this.transform.position.z, newZ * this.Speed));
+				float distance = (target - (test.transform.position + test.center)).magnitude;
+				float requiredDistance = (this.movementCollider.radius * this.movementCollider.transform.localScale.x) + (test.radius * test.transform.localScale.x);
+				if(distance < requiredDistance)
+				{
+					// We are too close to a collider, bail out
+					return;
+				}
+			}
+			
+			// Test if we are moving into a drag entry
+			bool wasDragged = this.CheckForDrag(target);
+			
+			if(!wasDragged && (this.MovementState == CharacterMovementState.Walking || this.MovementState == CharacterMovementState.Idle))
+			{
+				this.lastGroundedPosition = this.transform.position;
 			}
 			
 			transform.Translate(newVector, null);
@@ -144,31 +417,118 @@ public class CharacterEntity : StageEntity
 			{
 				this.rotate = newState;
 				this.transform.Rotate(Vector3.up, 180);
-			}		
+			}
 		}
 	}
 	
-	protected override void HandleCollision(Collider collider)
+	protected override void Die ()
 	{
+		base.Die ();
+		
+		print ("Dying");
+		if(this.SFXDying != null)
+		{
+			audio.PlayOneShot(this.SFXDying);
+		}
 	}
-	
-	
 	
 	// ---------------------------------------------
 	// Protected
 	// ---------------------------------------------	
-	private void UpdateAirState()
+	private bool CheckForDrag(Vector3 target)
 	{
-		transform.Translate(new Vector3(this.moveDirection.x * AirSpeed, 0, this.moveDirection.y * AirSpeed), null);
-		
-		if(this.transform.position.y < DeathDepth)
+		foreach(var drag in this.gameManager.DragEntries)
 		{
-			this.ForceDeath();
-			this.transform.position = this.lastGroundedPosition;
+			BoxCollider test = drag.collider as BoxCollider;				
+			if(test.bounds.Contains(target))
+			{
+				this.upVelocity = -drag.GetComponent<DragObject>().Pull;
+				this.MovementState = CharacterMovementState.Falling;
+				this.moveDirection = new Vector2(0, 0);
+				this.LeaveCombat();
+				if(this.SFXFalling != null)
+				{
+					audio.PlayOneShot(this.SFXFalling);
+				}
+				
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	private void UpdateAirState()
+	{			
+		this.upVelocity -= this.Gravity;
+		if(this.upVelocity < this.TerminalVelocity)
+		{
+			this.upVelocity = this.TerminalVelocity;
+		}
+		
+		this.transform.Translate(Mathf.Abs(this.moveDirection.x * AirSpeed), this.upVelocity, 0);
+		
+		// Stop air movement if we are hitting the boundaries
+		if(this.transform.position.x < this.gameManager.StageBounds.x)
+		{
+			this.moveDirection = new Vector2(0, 0);
+			this.transform.position = new Vector3(this.gameManager.StageBounds.x, this.transform.position.y, this.transform.position.z);
+		}
+		else if(this.transform.position.x > this.gameManager.StageBounds.width)
+		{
+			this.moveDirection = new Vector2(0, 0);
+			this.transform.position = new Vector3(this.gameManager.StageBounds.width, this.transform.position.y, this.transform.position.z);
+		}
+		
+		if(this.upVelocity < 0.1f && this.MovementState == CharacterMovementState.Jumping)
+		{
+			print ("Leveling");
+			this.MovementState = CharacterMovementState.Leveling;
 			return;
 		}
 		
-		// Todo: Check the state of air and move us into level or idle
+		if(this.upVelocity < -0.01f && this.MovementState == CharacterMovementState.Leveling)
+		{
+			print ("Landing");
+			this.MovementState = CharacterMovementState.Landing;
+			return;
+		}
+		
+		// Check if we are jumping into a drag area
+		if(this.MovementState != CharacterMovementState.Falling)
+		{
+			bool wasDragged = this.CheckForDrag(this.transform.position);
+			if(wasDragged)
+			{
+				return;
+			}
+		}
+		
+		if(this.transform.position.y < this.baseY && this.MovementState == CharacterMovementState.Landing)
+		{
+			print ("Landed");
+			if(this.SFXJump != null)
+			{
+				audio.PlayOneShot(this.SFXLand);
+			}
+			
+			this.upVelocity = 0;
+			this.lockAirAnimation = false;
+			this.transform.position = new Vector3(this.transform.position.x, this.baseY, this.transform.position.z);
+			this.MovementState = CharacterMovementState.Idle;
+			this.LeaveCombat();
+			return;
+		}
+		
+		if(this.transform.position.y < DeathDepth)
+		{
+			print ("Death from falling");
+			this.TakeDamage(this.gameManager.FallDamage, null);
+			this.upVelocity = 0;
+			this.transform.position = new Vector3(this.lastGroundedPosition.x, this.baseY, this.lastGroundedPosition.z);
+			this.MovementState = CharacterMovementState.Idle;
+			return;
+		}
 	}
 	
 	private float CheckXMovementBounds(float origin, float translation)
@@ -190,7 +550,7 @@ public class CharacterEntity : StageEntity
 	
 	private float CheckZMovementBounds(float origin, float translation)
 	{
-		print (origin+translation+" "+translation+ " -- "+this.gameManager.StageBounds);
+//		print (origin+translation+" "+translation+ " -- "+this.gameManager.StageBounds);
 		if((origin + translation) < this.gameManager.StageBounds.y && translation < 0)
 		{
 			this.transform.position = this.transform.position + new Vector3(0, 0, Mathf.Abs(translation));
@@ -204,5 +564,126 @@ public class CharacterEntity : StageEntity
 		}
 		
 		return translation;
+	}
+	
+	private void UpdateAnimationState()
+	{
+		if(this.animation == null)
+		{
+			return;
+		}
+		
+		if(this.IsDead)
+		{
+			this.PlayAnimation(this.DeathAnimation, true, true, this.AnimationSpeed);
+			return;
+		}
+		
+		if(this.playComboAnimation)
+		{
+			if(this.forceComboAnimation)
+			{
+				this.lastAnimationPlayed = null;
+			}
+			
+			this.PlayAnimation(this.ComboChain[this.comboStage], true, false, this.ComboAnimationSpeeds[this.comboStage]);
+			this.playComboAnimation = false;
+			this.lastAnimationWasCombat = true;
+			this.comboDelay = this.ComboDelay[this.comboStage];
+			return;
+		}
+		
+		if(this.MovementState == CharacterMovementState.Idle && !this.InCombat)
+		{			
+			this.PlayAnimation(this.IdleAnimation, false, true, this.AnimationSpeed);
+			return;
+		}
+		
+		if(this.MovementState == CharacterMovementState.Walking && !this.InCombat)
+		{
+			this.PlayAnimation(this.WalkAnimation, false, true, this.AnimationSpeed);
+			return;
+		}
+		
+		if(!this.lockAirAnimation && this.MovementState == CharacterMovementState.Jumping)
+		{
+			if(this.InCombat)
+			{
+				if(this.allowAirCombatAnim)
+				{
+					this.PlayAnimation(this.JumpCombatAnimation, true, false, this.AnimationSpeed);
+					this.allowAirCombatAnim = false;
+					this.lockAirAnimation = true;
+				}
+				
+				return;
+			}
+			
+			this.PlayAnimation(this.JumpAnimation, true, true, this.AnimationSpeed);
+			return;
+		}
+		
+		if(!this.lockAirAnimation && this.MovementState == CharacterMovementState.Leveling)
+		{
+			this.PlayAnimation(this.LevelingAnimation, true, true, this.AnimationSpeed);
+			return;
+		}
+		
+		if(!this.lockAirAnimation && 
+			(this.MovementState == CharacterMovementState.Falling || this.MovementState == CharacterMovementState.Landing))
+		{
+			if(this.InCombat)
+			{
+				if(this.allowAirCombatAnim)
+				{
+					this.PlayAnimation(this.FallCombatAnimation, true, false, this.AnimationSpeed);
+					this.allowAirCombatAnim = false;
+					this.lockAirAnimation = true;
+				}
+				
+				return;
+			}
+			
+			this.PlayAnimation(this.FallAnimation, true, true, this.AnimationSpeed);
+			return;
+		}
+	}
+	
+	private void PlayAnimation(string animation, bool onceOnly = true, bool transition = true, float speed = 1.0f)
+	{
+		if(this.lastAnimationPlayed == animation)
+		{
+			if(onceOnly || this.animation.isPlaying)
+			{
+				return;
+			}
+		}
+		
+		// Turn off looping if we have to since we are changing animations
+		if(this.lastAnimationPlayed != null)
+		{
+			if(this.animation[this.lastAnimationPlayed].wrapMode == WrapMode.Loop)
+			{
+				this.animation[this.lastAnimationPlayed].wrapMode = WrapMode.Default;
+				this.animation.Stop();
+			}
+		}		
+		
+		print("PlayAnim: "+animation);
+		this.animation[animation].speed = speed;
+		if(!onceOnly)
+		{
+			this.animation[animation].wrapMode = WrapMode.Loop;
+		}
+		
+		if(transition && this.animation.isPlaying)
+		{
+			this.animation.CrossFade(animation, this.AnimationFadeTime, PlayMode.StopAll);
+		} else
+		{
+			this.animation.Play(animation);
+		}
+		
+		this.lastAnimationPlayed = animation;
 	}
 }
