@@ -27,10 +27,9 @@ namespace Assets.Scripts
             float randZ = this.transform.position.z-0.01f+Random.Range (0,0.02f);
             var randV = new Vector3(randX,randY,randZ);
             var indicator = this.stageManager.SpawnHitIndicator(this.IndicatorObject, randV);
-            var rigidball = newball.GetComponent<Rigidbody>();
-            indicator..AddForce (-15+Random.Range(0,30),Random.Range(0,10),-15+Random.Range(0,30));
-            
-            Destroy(rigidball.gameObject, 5);
+            indicator.GetComponent<Rigidbody>().AddForce (-15+Random.Range(0,30),Random.Range(0,10),-15+Random.Range(0,30));
+
+            Destroy(indicator.gameObject, 5);
             //}
         }
     

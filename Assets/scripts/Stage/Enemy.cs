@@ -2,9 +2,14 @@ using UnityEngine;
 
 namespace Assets.Scripts.Stage
 {
+    using System.Collections.Generic;
+
     public class Enemy : CharacterEntity 
     {
+        private readonly List<GameObject> hitTest = new List<GameObject>();
+
         private float attackTick;
+        private bool comboDidHit;
 
         // -------------------------------------------------------------------
         // Public
@@ -38,6 +43,13 @@ namespace Assets.Scripts.Stage
             {
                 this.PerformAI();
             }
+        }
+
+        protected override void ResolveCombat(GameObject target, CharacterEntity targetData)
+        {
+            base.ResolveCombat(target, targetData);
+
+            this.comboDidHit = true;
         }
     
         private void PerformAI()
@@ -78,8 +90,10 @@ namespace Assets.Scripts.Stage
             var distance = (target.transform.position - this.transform.position).magnitude;
             if (distance <= (this.HitReach + radius + 0.2f))
             {
-                this.attackTick = 0;
+                /*this.attackTick = 0;
                 target.GetComponent<CharacterEntity>().TakeDamage(1, this.gameObject);
+                return true;*/
+                this.EnterCombat(0);
                 return true;
             }
         
@@ -100,7 +114,8 @@ namespace Assets.Scripts.Stage
                 distanceValues.z = this.ClampDistance(distanceValues.z, radius);
             
                 Vector3 direction = distanceValues.normalized;
-                this.transform.Translate(new Vector3(direction.x * this.Speed, 0, direction.z * this.Speed));
+                this.MoveCharacter(direction.x * this.Speed, direction.z * this.Speed);
+                //this.transform.Translate(new Vector3(, 0, ));
                 return true;
             }
         

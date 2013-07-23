@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Assets.Scripts.Stage
 {
+    using System.Collections.Generic;
+
     public enum CharacterMovementState
     {
         Idle,
@@ -15,6 +17,8 @@ namespace Assets.Scripts.Stage
 
     public class CharacterEntity : StageEntity 
     {
+        private readonly List<GameObject> hitTest = new List<GameObject>();
+
         private StageManager gameManager;
         private CapsuleCollider movementCollider;
 
@@ -33,7 +37,6 @@ namespace Assets.Scripts.Stage
         private float baseY;
         private float comboDelay;
     
-        private int currentComboProgress = -1;
         private float idleDelay;
         private float lastCombatTick;
         private float deathTick;
@@ -124,7 +127,10 @@ namespace Assets.Scripts.Stage
             this.baseY = this.transform.position.y;
             this.Health = this.StartingHealth;
 
-            this.comboChain = this.Combo.GetComponents<ComboChainElement>();
+            if (this.Combo != null)
+            {
+                this.comboChain = this.Combo.GetComponents<ComboChainElement>();
+            }
         }
     
         public override void Update()
@@ -207,8 +213,8 @@ namespace Assets.Scripts.Stage
             {
                 return;
             }
-
-            var target = other.GetComponent<Enemy>();
+            
+            var target = other.GetComponent<CharacterEntity>();
             if (target != null && !target.IsDead && this.allowHit)
             {
                 this.TestHitCollision(child.transform.position, target, indicatorOnly);
@@ -249,14 +255,30 @@ namespace Assets.Scripts.Stage
                 return this.comboChain;
             }
         }
-    
-        protected virtual void ResolveCombat(GameObject target, Enemy targetData)
+
+        protected virtual void ResolveCombat(GameObject target, CharacterEntity targetData)
         {
-            targetData.TakeDamage(this.comboChain[this.comboStage].Damage);
+            if (this.hitTest.Contains(target))
+            {
+                return;
+            }
+
+            this.hitTest.Add(target);
+            target.GetComponent<StageEntity>().TakeDamage(this.comboChain[this.comboStage].Damage);
+
+            // Combo knockback from force
+            if (this.comboChain[this.comboStage].Force > 0)
+            {
+                Vector3 direction = (target.transform.position - this.transform.position).normalized;
+                direction.y = 0;
+                target.transform.Translate(direction * this.comboChain[this.comboStage].Force);
+            }
         }
     
         protected void EnterCombat(int newStage)
         {
+            this.hitTest.Clear();
+
             // Check if we are in air lock mode, no combat then
             if (this.lockAirAnimation || this.IsComboLocked)
             {
@@ -409,7 +431,7 @@ namespace Assets.Scripts.Stage
         // ---------------------------------------------
         // Private
         // ---------------------------------------------
-        private void TestHitCollision(Vector3 position, Enemy enemy, bool indicatorOnly)
+        private void TestHitCollision(Vector3 position, CharacterEntity target, bool indicatorOnly)
         {
             if (this.HitIndicator != null)
             {
@@ -426,7 +448,7 @@ namespace Assets.Scripts.Stage
                 this.audio.PlayOneShot(this.comboChain[this.comboStage].SFXHit);
             }
 
-            this.ResolveCombat(collider.gameObject, enemy);
+            this.ResolveCombat(target.gameObject, target);
             this.allowHit = false;
         }
 
@@ -638,6 +660,12 @@ namespace Assets.Scripts.Stage
     
         private void PlayAnimation(string animationName, bool onceOnly = true, bool transition = true, float speed = 1.0f)
         {
+            if (string.IsNullOrEmpty(animationName))
+            {
+                this.animation.Stop();
+                return;
+            }
+
             if (this.lastAnimationPlayed == animationName)
             {
                 if (onceOnly || this.animation.isPlaying)

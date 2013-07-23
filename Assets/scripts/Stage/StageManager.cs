@@ -22,6 +22,8 @@ namespace Assets.Scripts.Stage
         private GameObject player1Model;
         private GameObject player2Model;
 
+        private GameObject generatedObjectsRoot;
+
         // -------------------------------------------------------------------
         // Public
         // -------------------------------------------------------------------
@@ -51,6 +53,8 @@ namespace Assets.Scripts.Stage
 
         public void Start()
         {
+            this.generatedObjectsRoot = new GameObject("__stage_generated");
+
             if (SceneState.Instance.PlayerSelected)
             {
                 this.InitializeFromSelection();
@@ -63,25 +67,6 @@ namespace Assets.Scripts.Stage
             if (this.Music != null)
             {
                 this.audio.PlayOneShot(this.Music);
-            }
-        }
-
-        private void InitializeFromSelection()
-        {
-            if (SceneState.Instance.Player1 != null)
-            {
-                this.player1Model = Instantiate(Resources.Load(SceneState.Instance.Player1), this.SpawnPositionPlayer1, Quaternion.identity) as GameObject;
-                this.player1 = this.player1Model.GetComponent<Player>();
-                this.player1.CameraFollows = true;
-                this.Player1HUD.GetComponent<PlayerHUD>().Player = this.player1.gameObject;
-            }
-
-            if (SceneState.Instance.Player2 != null)
-            {
-                this.player2Model = Instantiate(Resources.Load(SceneState.Instance.Player2), this.SpawnPositionPlayer2, Quaternion.identity) as GameObject;
-                this.player2 = this.player2Model.GetComponent<Player>();
-                this.player2.ControlPrefix = "Player2";
-                this.Player2HUD.GetComponent<PlayerHUD>().Player = this.player2.gameObject;
             }
         }
 
@@ -124,6 +109,7 @@ namespace Assets.Scripts.Stage
         public GameObject SpawnHitIndicator(GameObject indicatorObject, Vector3 position)
         {
             var indicator = (GameObject)Instantiate(indicatorObject, position, Quaternion.identity);
+            indicator.transform.parent = this.generatedObjectsRoot.transform;
             if (this.activeIndicators.Count > this.IndicatorLimit)
             {
                 Destroy(this.activeIndicators.Dequeue());
@@ -136,6 +122,7 @@ namespace Assets.Scripts.Stage
         public GameObject SpawnDropSplat(GameObject splatObject, Vector3 position)
         {
             var splat = (GameObject)Instantiate(splatObject, position, Quaternion.identity);
+            splat.transform.parent = this.generatedObjectsRoot.transform;
             if (this.activeSplats.Count > this.SplatLimit)
             {
                 Destroy(this.activeSplats.Dequeue());
@@ -148,6 +135,7 @@ namespace Assets.Scripts.Stage
         public GameObject SpawnDrop(GameObject dropObject, Vector3 position, Quaternion rotation)
         {
             var drop = (GameObject)Instantiate(dropObject, position, rotation);
+            drop.transform.parent = this.generatedObjectsRoot.transform;
             if (this.activeDrops.Count > this.DropLimit)
             {
                 Destroy(this.activeDrops.Dequeue());
@@ -201,6 +189,25 @@ namespace Assets.Scripts.Stage
             }
         }
 
+        private void InitializeFromSelection()
+        {
+            if (SceneState.Instance.Player1 != null)
+            {
+                this.player1Model = Instantiate(Resources.Load(SceneState.Instance.Player1), this.SpawnPositionPlayer1, Quaternion.identity) as GameObject;
+                this.player1 = this.player1Model.GetComponent<Player>();
+                this.player1.CameraFollows = true;
+                this.Player1HUD.GetComponent<PlayerHUD>().Player = this.player1.gameObject;
+            }
+
+            if (SceneState.Instance.Player2 != null)
+            {
+                this.player2Model = Instantiate(Resources.Load(SceneState.Instance.Player2), this.SpawnPositionPlayer2, Quaternion.identity) as GameObject;
+                this.player2 = this.player2Model.GetComponent<Player>();
+                this.player2.ControlPrefix = "Player2";
+                this.Player2HUD.GetComponent<PlayerHUD>().Player = this.player2.gameObject;
+            }
+        }
+
         private void InitializeFromManual()
         {
             if (this.Player1ModelOverride != null)
@@ -212,8 +219,8 @@ namespace Assets.Scripts.Stage
 
             if (this.Player2ModelOverride != null)
             {
-                this.player1Model = this.Player1ModelOverride;
-                this.player2 = this.player1Model.GetComponent<Player>();
+                this.player2Model = this.Player2ModelOverride;
+                this.player2 = this.player2Model.GetComponent<Player>();
                 this.Player2HUD.GetComponent<PlayerHUD>().Player = this.player2.gameObject;
             }
         }

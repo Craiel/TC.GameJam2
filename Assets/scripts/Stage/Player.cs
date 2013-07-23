@@ -1,13 +1,9 @@
-using System.Collections.Generic;
-
 using UnityEngine;
 
 namespace Assets.Scripts.Stage
 {
     public class Player : CharacterEntity 
     {
-        private readonly List<GameObject> hitTest = new List<GameObject>();
-
         private Camera mainCamera;
     
         private int currentChain;
@@ -67,7 +63,6 @@ namespace Assets.Scripts.Stage
                 }
             
                 this.comboDidHit = false;
-                this.hitTest.Clear();
                 this.EnterCombat(this.currentChain);
             }
             else if (jumpAction)
@@ -91,29 +86,16 @@ namespace Assets.Scripts.Stage
         // -------------------------------------------------------------------
         // Protected
         // -------------------------------------------------------------------
-        protected override void ResolveCombat(GameObject target, Enemy targetData)
+        protected override void ResolveCombat(GameObject target, CharacterEntity targetData)
         {
-            if (this.hitTest.Contains(target))
-            {
-                return;
-            }
-        
             base.ResolveCombat(target, targetData);
         
             this.CurrentTarget = target;
             this.comboDidHit = true;
-            this.hitTest.Add(target);
         
-            if (this.ComboChain[this.currentChain].Force > 0)
+            if (targetData.IsDead && targetData as Enemy != null)
             {
-                Vector3 direction = (target.transform.position - this.transform.position).normalized;
-                direction.y = 0;
-                target.transform.Translate(direction * this.ComboChain[this.currentChain].Force);
-            }
-        
-            if (targetData.IsDead)
-            {
-                this.Score += targetData.ScoreReward;
+                this.Score += ((Enemy)targetData).ScoreReward;
             }
         }
     
