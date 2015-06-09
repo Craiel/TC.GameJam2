@@ -66,7 +66,7 @@ namespace Assets.Scripts.Stage
         
             if (this.Music != null)
             {
-                this.audio.PlayOneShot(this.Music);
+                this.GetComponent<AudioSource>().PlayOneShot(this.Music);
             }
         }
 

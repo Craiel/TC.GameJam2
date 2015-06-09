@@ -11,7 +11,7 @@ namespace Assets.Scripts.Stage
     
         public void Start() 
         {
-            var typedCollider = this.collider as BoxCollider;
+            var typedCollider = this.GetComponent<Collider>() as BoxCollider;
             if (typedCollider != null)
             {
                 Camera.main.GetComponent<StageManager>().DragEntries.Add(this.gameObject);

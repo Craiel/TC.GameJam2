@@ -285,7 +285,7 @@ namespace Assets.Scripts.Stage
                 return;
             }
         
-            if (!this.IsAirborne && this.InCombat && this.lastAnimationWasCombat && this.animation.isPlaying)
+            if (!this.IsAirborne && this.InCombat && this.lastAnimationWasCombat && this.GetComponent<Animation>().isPlaying)
             {
                 this.queuedComboStage = newStage;
                 this.queueNextCombat = true;
@@ -295,7 +295,7 @@ namespace Assets.Scripts.Stage
             this.queueNextCombat = false;
             if (this.comboChain[newStage].SFX != null)
             {
-                this.audio.PlayOneShot(this.comboChain[newStage].SFX);
+                this.GetComponent<AudioSource>().PlayOneShot(this.comboChain[newStage].SFX);
             }
         
             // If we are executing the same stage again force the animation
@@ -331,7 +331,7 @@ namespace Assets.Scripts.Stage
             // Jumping
             if (this.SFXJump != null)
             {
-                this.audio.PlayOneShot(this.SFXJump);
+                this.GetComponent<AudioSource>().PlayOneShot(this.SFXJump);
             }
         
             this.lockAirAnimation = false;
@@ -383,7 +383,7 @@ namespace Assets.Scripts.Stage
                 Vector3 target = this.movementCollider.transform.position + this.movementCollider.center + new Vector3(newX, 0, newZ);
                 for (int i = 0; i < this.gameManager.CollidingGeometry.Count; i++)
                 {
-                    var test = this.gameManager.CollidingGeometry[i].collider as CapsuleCollider;
+                    var test = this.gameManager.CollidingGeometry[i].GetComponent<Collider>() as CapsuleCollider;
                     if (test == null)
                     {
                         continue;
@@ -424,7 +424,7 @@ namespace Assets.Scripts.Stage
         
             if (this.SFXDying != null)
             {
-                this.audio.PlayOneShot(this.SFXDying);
+                this.GetComponent<AudioSource>().PlayOneShot(this.SFXDying);
             }
         }
     
@@ -445,7 +445,7 @@ namespace Assets.Scripts.Stage
 
             if (this.comboChain[this.comboStage].SFXHit != null)
             {
-                this.audio.PlayOneShot(this.comboChain[this.comboStage].SFXHit);
+                this.GetComponent<AudioSource>().PlayOneShot(this.comboChain[this.comboStage].SFXHit);
             }
 
             this.ResolveCombat(target.gameObject, target);
@@ -456,7 +456,7 @@ namespace Assets.Scripts.Stage
         {
             foreach (var drag in this.gameManager.DragEntries)
             {
-                var typedCollider = drag.collider as BoxCollider;
+                var typedCollider = drag.GetComponent<Collider>() as BoxCollider;
                 if (typedCollider.bounds.Contains(target))
                 {
                     this.upVelocity = -drag.GetComponent<DragObject>().Pull;
@@ -465,7 +465,7 @@ namespace Assets.Scripts.Stage
                     this.LeaveCombat();
                     if (this.SFXFalling != null)
                     {
-                        this.audio.PlayOneShot(this.SFXFalling);
+                        this.GetComponent<AudioSource>().PlayOneShot(this.SFXFalling);
                     }
                 
                     return true;
@@ -526,7 +526,7 @@ namespace Assets.Scripts.Stage
                 // Landed
                 if (this.SFXLand != null)
                 {
-                    this.audio.PlayOneShot(this.SFXLand);
+                    this.GetComponent<AudioSource>().PlayOneShot(this.SFXLand);
                 }
             
                 this.upVelocity = 0;
@@ -579,7 +579,7 @@ namespace Assets.Scripts.Stage
     
         private void UpdateAnimationState()
         {
-            if (this.animation == null)
+            if (this.GetComponent<Animation>() == null)
             {
                 return;
             }
@@ -662,13 +662,13 @@ namespace Assets.Scripts.Stage
         {
             if (string.IsNullOrEmpty(animationName))
             {
-                this.animation.Stop();
+                this.GetComponent<Animation>().Stop();
                 return;
             }
 
             if (this.lastAnimationPlayed == animationName)
             {
-                if (onceOnly || this.animation.isPlaying)
+                if (onceOnly || this.GetComponent<Animation>().isPlaying)
                 {
                     return;
                 }
@@ -677,26 +677,26 @@ namespace Assets.Scripts.Stage
             // Turn off looping if we have to since we are changing animations
             if (this.lastAnimationPlayed != null)
             {
-                if (this.animation[this.lastAnimationPlayed].wrapMode == WrapMode.Loop)
+                if (this.GetComponent<Animation>()[this.lastAnimationPlayed].wrapMode == WrapMode.Loop)
                 {
-                    this.animation[this.lastAnimationPlayed].wrapMode = WrapMode.Default;
-                    this.animation.Stop();
+                    this.GetComponent<Animation>()[this.lastAnimationPlayed].wrapMode = WrapMode.Default;
+                    this.GetComponent<Animation>().Stop();
                 }
             }
 
-            this.animation[animationName].speed = speed;
+            this.GetComponent<Animation>()[animationName].speed = speed;
             if (!onceOnly)
             {
-                this.animation[animationName].wrapMode = WrapMode.Loop;
+                this.GetComponent<Animation>()[animationName].wrapMode = WrapMode.Loop;
             }
         
-            if (transition && this.animation.isPlaying)
+            if (transition && this.GetComponent<Animation>().isPlaying)
             {
-                this.animation.CrossFade(animationName, this.AnimationFadeTime, PlayMode.StopAll);
+                this.GetComponent<Animation>().CrossFade(animationName, this.AnimationFadeTime, PlayMode.StopAll);
             }
             else
             {
-                this.animation.Play(animationName);
+                this.GetComponent<Animation>().Play(animationName);
             }
 
             this.lastAnimationPlayed = animationName;

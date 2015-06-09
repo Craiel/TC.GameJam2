@@ -25,7 +25,7 @@ namespace Assets.Scripts.Stage
                 return;
             }
         
-            this.host.OnChildCollision(this.collider, other, this.IndicatorOnly);
+            this.host.OnChildCollision(this.GetComponent<Collider>(), other, this.IndicatorOnly);
         }
     
         public void OnTriggerStay(Collider other)
@@ -35,7 +35,7 @@ namespace Assets.Scripts.Stage
                 return;
             }
         
-            this.host.OnChildCollisionStay(this.collider, other, this.IndicatorOnly);
+            this.host.OnChildCollisionStay(this.GetComponent<Collider>(), other, this.IndicatorOnly);
         }
     }
 }

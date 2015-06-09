@@ -15,7 +15,7 @@ public class BrainScript : MonoBehaviour {
 		if(transform.position.y<1.9f)
 		{
 			//rigidbody.AddForce(0f,5f+Random.Range (0f,5f),0f);
-			rigidbody.AddForce(0f,10f,0f);
+			GetComponent<Rigidbody>().AddForce(0f,10f,0f);
 		}
 		else if(transform.position.y>2.5f)
 		{
@@ -23,11 +23,11 @@ public class BrainScript : MonoBehaviour {
 		}
 		else if(transform.position.y<1.0)
 		{
-			rigidbody.AddForce(0f,17f,0f);
+			GetComponent<Rigidbody>().AddForce(0f,17f,0f);
 		}
 		else
 		{
-			rigidbody.AddForce(0f,7f,0f);
+			GetComponent<Rigidbody>().AddForce(0f,7f,0f);
 		}
 		
 		

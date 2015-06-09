@@ -40,7 +40,7 @@ namespace Assets.Scripts.UI
         public void OnGUI()
         {
             var position = new Vector2(Screen.width * this.transform.position.x, Screen.height * this.transform.position.y);
-            if (this.guiText.alignment == TextAlignment.Right)
+            if (this.GetComponent<GUIText>().alignment == TextAlignment.Right)
             {
                 position.x = Screen.width - this.Width;
             }

@@ -86,7 +86,7 @@ namespace Assets.Scripts.Stage
                 return false;
             }
         
-            var radius = target.collider.GetComponent<CapsuleCollider>().radius;
+            var radius = target.GetComponent<Collider>().GetComponent<CapsuleCollider>().radius;
             var distance = (target.transform.position - this.transform.position).magnitude;
             if (distance <= (this.HitReach + radius + 0.2f))
             {
@@ -102,7 +102,7 @@ namespace Assets.Scripts.Stage
     
         private bool MoveTowards(GameObject target)
         {
-            var radius = target.collider.GetComponent<CapsuleCollider>().radius;
+            var radius = target.GetComponent<Collider>().GetComponent<CapsuleCollider>().radius;
         
             // No closer than the characters boundaries
             var distance = (target.transform.position - this.transform.position).magnitude;

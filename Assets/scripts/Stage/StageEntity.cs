@@ -97,7 +97,7 @@ namespace Assets.Scripts.Stage
     
         protected virtual void HandleCollision(Collider other)
         {
-            var component = collider.gameObject.GetComponent<StageEntity>();
+            var component = GetComponent<Collider>().gameObject.GetComponent<StageEntity>();
             if (component != null && component.GetType() != this.GetType())
             {
                 if (!component.CollisionEnabled)
@@ -105,7 +105,7 @@ namespace Assets.Scripts.Stage
                     return;
                 }
             
-                this.TakeDamage(component.CollisionDamage, collider.gameObject);
+                this.TakeDamage(component.CollisionDamage, GetComponent<Collider>().gameObject);
             }
         }
     }
